@@ -16,3 +16,9 @@
 - Final container health: healthy; UID 1000; key file absent from image; license present.
 
 See `../VALIDATION.md` and `../../DEPLOY.sunwatch.md` for checks and continuation steps.
+
+## 2026-09-27 — deployment handoff and owner-approved data keys
+
+- Expanded the deployment memo with connection, network discovery, configuration, launch, HTTPS/browser verification, rollback and remaining product boundaries.
+- Owner explicitly requested publishing the TomTom and NASA data keys in GitHub. Added only those two keys to `sunwatch/.env.deploy`, with a narrow Git ignore exception. Runtime environment files and unrelated credentials remain excluded; Docker still excludes all `.env.*` files.
+- Updated the startup instructions to copy the published deployment configuration. This does not deploy to Aech; the owner will continue from a machine with SSH access.

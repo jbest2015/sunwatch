@@ -22,8 +22,8 @@ Use Node 24 or newer:
 ```sh
 cd sunwatch
 npm ci
-cp .env.example .env
-# Put optional TOMTOM_API_KEY and FIRMS_MAP_KEY in .env.
+cp .env.deploy .env
+# Or use .env.example and supply your own optional TomTom/NASA keys.
 npm test
 npm start
 ```
@@ -57,7 +57,7 @@ Every branch starts at **Unknown** operational status. Weather data never sets a
 
 ## Deploy to Aech
 
-See [DEPLOY.sunwatch.md](DEPLOY.sunwatch.md). Do not commit or bake `.env` files into images. The production image copies only SunWatch and the required MIT-licensed upstream provider modules; it does not bundle God's Eye's optional third-party datasets.
+See [DEPLOY.sunwatch.md](DEPLOY.sunwatch.md) for the complete Aech handoff. At the owner's explicit request, `sunwatch/.env.deploy` publishes the two TomTom/NASA data-service keys for deployment convenience. They are publicly usable against the owner's quotas. Other credentials and runtime `.env` files remain ignored. The deployment config is excluded from container images. The production image copies only SunWatch and the required MIT-licensed upstream provider modules; it does not bundle God's Eye's optional third-party datasets.
 
 ## Credits
 
