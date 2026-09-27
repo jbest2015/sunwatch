@@ -1,5 +1,9 @@
 # SunWatch deployment memo
 
+## Pending Florida camera update
+
+The FL511 camera fix adds `server/providers/cctv/florida.js` and defaults SunWatch to the Florida catalog (currently 4,960 cameras) with public JPEG snapshots. No new key or environment change is required. Pull the latest `sunwatch` branch and rebuild only SunWatch with the existing standalone `docker-compose` command below. The recorded globe deployment predates this camera fix. Validate `/api/cctv/sources` contains `fl511-*` IDs and `/api/cctv/frame/fl511-892` returns a JPEG. Refresh the browser after deployment; enable CAMERAS, select Aloma and zoom out to Surroundings to see nearby roads. Camera headings are uncalibrated; snapshots are not continuous video. Local container and three nearby image checks passed; the layer reached ON in the browser.
+
 Prepared September 27, 2026 for deployment from a machine with Aech SSH access.
 
 | Item | Value |
@@ -189,4 +193,3 @@ This is an independent preview, not an official Suncoast operations system. Publ
 Imports and status notes live in **each browser**, not a shared server database. Local-preview data does not automatically migrate to the public hostname. JSON exports include notes, but the importer currently restores locations only. Shared status, authentication, audit history and internal operational integrations remain future work.
 
 Address lookup sends addresses to TomTom through the backend. App limits are 20 requests/minute and 500 requests/UTC day per running process; restarts reset those counters, and requests using the published key directly bypass app limits. No paid AI, voice or direct Google billing is enabled. Photorealistic tiles use the existing Cesium ion asset access; service quotas and applicable account terms still apply. Public camera coverage varies; ALPR markers represent locations, not camera access. The optional noncommercial submarine-cable dataset is not included.
-
