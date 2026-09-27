@@ -1,3 +1,5 @@
+> **SunWatch fork:** Start with [README.sunwatch.md](README.sunwatch.md) for the Suncoast branch and hurricane-awareness preview. Its app lives in `sunwatch/`; the upstream God's Eye documentation follows below.
+
 <div align="center">
 
 # 🌐 God's Eye View

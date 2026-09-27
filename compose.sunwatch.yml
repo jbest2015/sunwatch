@@ -1,0 +1,35 @@
+services:
+  sunwatch:
+    build:
+      context: .
+      dockerfile: Dockerfile.sunwatch
+    restart: unless-stopped
+    env_file: sunwatch/.env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 4180
+      VIRTUAL_HOST: sunwatch.johnbest.ai
+      VIRTUAL_PORT: 4180
+      LETSENCRYPT_HOST: sunwatch.johnbest.ai
+    expose:
+      - "4180"
+    networks:
+      - proxy
+    mem_limit: 512m
+    pids_limit: 100
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+networks:
+  proxy:
+    external: true
+    name: ${AECH_PROXY_NETWORK:?Set AECH_PROXY_NETWORK to the existing nginx-proxy network}

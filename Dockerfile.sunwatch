@@ -1,0 +1,19 @@
+FROM node:24-alpine
+WORKDIR /app
+COPY package.json ./package.json
+COPY server/providers/common ./server/providers/common
+COPY server/providers/cyclones.js server/providers/weather.js ./server/providers/
+COPY src/sources/windBody.js src/sources/httpBody.js ./src/sources/
+COPY src/data/firmsCsv.js ./src/data/firmsCsv.js
+WORKDIR /app/sunwatch
+COPY sunwatch/package.json sunwatch/package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
+COPY sunwatch/server.mjs ./
+COPY sunwatch/public ./public
+COPY sunwatch/data ./data
+COPY LICENSE /app/LICENSE
+ENV NODE_ENV=production HOST=0.0.0.0 PORT=4180
+USER node
+EXPOSE 4180
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s CMD node -e "fetch('http://127.0.0.1:4180/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node","server.mjs"]

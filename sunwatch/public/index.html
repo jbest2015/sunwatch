@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#123d43" />
+    <title>SunWatch — Branch readiness</title>
+    <link rel="icon" href="/sunwatch-logo.png" />
+    <link rel="stylesheet" href="/vendor/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <img src="/sunwatch-logo.png" alt="SunWatch" /><span
+          class="brand-divider"
+        ></span
+        ><span class="brand-tag">A CLEARER VIEW.<br />A BETTER RESPONSE.</span>
+      </div>
+      <div class="header-right">
+        <span class="demo-pill">INNOVATION PREVIEW</span><span id="today"></span
+        ><button id="export" class="quiet">Export locations ↗</button>
+      </div>
+    </header>
+    <div class="workspace">
+      <aside class="sidebar">
+        <div class="sidebar-heading">
+          <div class="eyebrow">YOUR NETWORK</div>
+          <h1>Every branch.<br />One view.</h1>
+          <p>Suncoast Credit Union · Florida</p>
+        </div>
+        <div class="metrics">
+          <div><strong id="total">81</strong><span>locations</span></div>
+          <div><strong id="county-count">20</strong><span>counties</span></div>
+          <div><strong id="alert-count">—</strong><span>NWS alerts</span></div>
+        </div>
+        <div class="tools">
+          <label class="search"
+            ><span>⌕</span
+            ><input
+              id="search"
+              placeholder="Find a branch, city or ZIP…"
+              aria-label="Search locations"
+          /></label>
+          <div class="filters">
+            <select id="county" aria-label="Filter by county">
+              <option value="">All counties</option></select
+            ><select id="status-filter" aria-label="Filter by status">
+              <option value="">All statuses</option>
+              <option>Unknown</option>
+              <option>Open</option>
+              <option>Limited service</option>
+              <option>Closed</option>
+            </select>
+          </div>
+          <div class="list-label">
+            <span id="shown">ALL LOCATIONS</span
+            ><button id="fit" class="text-button">View all ↗</button>
+          </div>
+        </div>
+        <div id="branches" class="branch-list"></div>
+        <div class="sidebar-bottom">
+          <button id="add" class="primary">＋ Add locations</button>
+          <p>Your additions and status notes stay in this browser.</p>
+        </div>
+      </aside>
+      <main>
+        <div class="map-top">
+          <span class="map-label"
+            ><span class="live-dot"></span> FLORIDA OPERATIONS VIEW</span
+          ><button id="layers-open" class="floating-button">
+            ☷ Map layers
+          </button>
+        </div>
+        <div id="map" aria-label="Branch locations and weather map"></div>
+        <section id="layers" class="layers panel">
+          <div class="panel-title">
+            <h2>Map layers</h2>
+            <button id="layers-close" aria-label="Close map layers">×</button>
+          </div>
+          <p>Choose the context you need.</p>
+          <label
+            ><input type="checkbox" data-layer="branches" checked /><span
+              >Branch locations<small>Your saved network</small></span
+            ></label
+          ><label
+            ><input type="checkbox" data-layer="alerts" checked /><span
+              >Weather alerts<small>National Weather Service</small></span
+            ></label
+          ><label
+            ><input type="checkbox" data-layer="radar" /><span
+              >Rain radar<small>NOAA MRMS observations</small></span
+            ></label
+          ><label
+            ><input type="checkbox" data-layer="storms" /><span
+              >Hurricane forecast<small
+                >NHC tracks & forecast cones</small
+              ></span
+            ></label
+          ><label
+            ><input type="checkbox" data-layer="fires" /><span
+              >Fire detections<small>NASA FIRMS · past 24 hours</small></span
+            ></label
+          >
+          <hr />
+          <label
+            ><input type="checkbox" id="satellite" /><span
+              >Satellite basemap<small>Esri World Imagery</small></span
+            ></label
+          ><a
+            href="https://www.floridadisaster.org/evacuationorders/"
+            target="_blank"
+            rel="noopener"
+            >Official evacuation information ↗</a
+          >
+        </section>
+        <div id="map-key">
+          <span class="key-pin"></span> Branch
+          <span class="key-alert"></span> Weather alert
+          <span class="key-storm"></span> Forecast cone
+        </div>
+        <div class="feed-bar">
+          <span id="feed-status" role="status"
+            >Connecting to weather services…</span
+          ><button id="refresh" class="text-button">Refresh ↻</button>
+        </div>
+        <section id="detail" class="detail panel" hidden></section>
+      </main>
+    </div>
+    <dialog id="add-dialog">
+      <div class="panel-title">
+        <h2>Add your locations</h2>
+        <button id="dialog-close" aria-label="Close add locations">×</button>
+      </div>
+      <p>Find one address, or import a list. Saved only in this browser.</p>
+      <form id="address-form">
+        <label
+          >Location name<input
+            id="new-name"
+            required
+            maxlength="100"
+            placeholder="Downtown branch" /></label
+        ><label
+          >Street address<input
+            id="new-address"
+            required
+            maxlength="250"
+            placeholder="123 Main Street, Tampa, FL" /></label
+        ><button class="primary">Find address</button>
+      </form>
+      <div id="address-results"></div>
+      <div class="import-divider">OR IMPORT A LIST</div>
+      <label class="file-button"
+        >Choose CSV or JSON<input
+          type="file"
+          id="import"
+          accept=".csv,.json,.geojson"
+      /></label>
+      <p class="hint">
+        Use name, address, city, county, state, zip, latitude, longitude. CSVs
+        with addresses only can be geocoded and reviewed before import.
+      </p>
+      <a download="locations-template.csv" href="/locations-template.csv"
+        >Download CSV template ↗</a
+      >
+      <div id="import-review"></div>
+      <p id="import-status" role="status"></p>
+    </dialog>
+    <div id="toast" role="status" hidden></div>
+    <script src="/vendor/leaflet/leaflet.js"></script>
+    <script src="/vendor/papaparse.js"></script>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

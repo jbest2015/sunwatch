@@ -1,0 +1,15 @@
+services:
+  sunwatch:
+    build:
+      context: .
+      dockerfile: Dockerfile.sunwatch
+    env_file: sunwatch/.env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 4180
+    ports:
+      - "127.0.0.1:4181:4180"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    mem_limit: 512m

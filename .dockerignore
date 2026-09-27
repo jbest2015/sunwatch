@@ -1,0 +1,9 @@
+**/node_modules
+**/.env
+**/.env.*
+.git
+dist
+**/*.log
+**/.gev-cache
+**/screenshots
+**/qa-shots
