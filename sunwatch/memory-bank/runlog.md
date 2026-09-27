@@ -43,5 +43,14 @@ Updated deployment memo and public data-key config (now including the Cesium bro
 - Remaining: status notes and imports are per-browser only; no shared storage, auth or audit trail.
 
 
-The deployment record above describes the old b90a0de Leaflet build. The globe rebuild still needs deployment; both histories were retained when merging the Mac update.
+The deployment record above describes the old b90a0de Leaflet build; both histories were retained when merging the Mac update.
+
+## 2026-09-27 — God's Eye globe rebuild deployed to Aech
+
+- Pulled `6287c1a` fast-forward into `/home/claude/sunwatch`. Appended `CESIUM_ION_TOKEN` to the existing `sunwatch/.env`; network config unchanged (`nextcloud_network`).
+- Built the multi-stage image first (`docker-compose build`), then swapped with `up -d --no-build`. Image `sha256:50d36b99…b55d`, tagged `sunwatch-sunwatch:6287c1a`. Leaflet image kept as `sunwatch-sunwatch:b90a0de` for rollback. New volume `sunwatch_sunwatch-cache`.
+- Container healthy, 0 restarts, ~265 MiB. Proxy config test OK; neighbors unaffected; existing certificate reused.
+- Public checks: all API routes 200; 169 locations (81 branches, 88 ATMs, 156 mapped); secret/cache paths 404.
+- Headless Chrome + WebGL: globe, logo, aircraft (200), traffic, Charlotte Harbor fly-to and point weather, Nearby, address add/note persistence (test data removed), and all Live Layers toggles ON. Mobile loads with no horizontal overflow.
+- Known: one expected 404 probe for the excluded local ADS-B receiver route. CCTV sources are upstream's (Austin, TxDOT, Caltrans, London, etc.); the server log lists no Florida camera feed, so Cameras shows non-Florida feeds. Mobile panel covers much of the globe.
 
