@@ -1,9 +1,5 @@
 # SunWatch deployment memo
 
-## Pending Florida camera update
-
-The FL511 camera fix adds `server/providers/cctv/florida.js` and defaults SunWatch to the Florida catalog (currently 4,960 cameras) with public JPEG snapshots. No new key or environment change is required. Pull the latest `sunwatch` branch and rebuild only SunWatch with the existing standalone `docker-compose` command below. The recorded globe deployment predates this camera fix. Validate `/api/cctv/sources` contains `fl511-*` IDs and `/api/cctv/frame/fl511-892` returns a JPEG. Refresh the browser after deployment; enable CAMERAS, select Aloma and zoom out to Surroundings to see nearby roads. Camera headings are uncalibrated; snapshots are not continuous video. Local container and three nearby image checks passed; the layer reached ON in the browser.
-
 Prepared September 27, 2026 for deployment from a machine with Aech SSH access.
 
 | Item | Value |
@@ -13,7 +9,7 @@ Prepared September 27, 2026 for deployment from a machine with Aech SSH access.
 | Branch | `sunwatch` (default branch) |
 | Server | `port.jsbjr.digital` (Aech), deployed as `claude` (docker group) |
 | Deployed directory | `/home/claude/sunwatch` (`/home/sammy` is not writable by `claude`) |
-| Status | **God's Eye globe rebuild (`6287c1a`) deployed to Aech September 27, 2026** — see [Deployment record](#deployment-record) |
+| Status | **God's Eye globe with Florida cameras (`57ef872`) deployed to Aech September 27, 2026** — see [Deployment record](#deployment-record) |
 
 ## Ready to deploy
 
@@ -134,9 +130,29 @@ After a successful deployment, update this memo and [runlog](sunwatch/memory-ban
 
 ## Deployment record
 
-### Current: God's Eye globe rebuild — `6287c1a`
+### Current: Florida FL511 cameras — `57ef872`
 
-Deployed **2026-09-27 22:40 UTC** from John's Mac as `claude@port.jsbjr.digital`, replacing the `b90a0de` Leaflet build in place (same directory, project, domain and network).
+Deployed **2026-09-27 22:52 UTC** from John's Mac as `claude@port.jsbjr.digital`: `git pull --ff-only` from `7d17d57`, `docker-compose build`, then `up -d --no-build`. No environment change (SunWatch's server defaults `CCTV_REGION=florida`, `CCTV_MAX_SOURCES=5000`).
+
+| Item | Value |
+| --- | --- |
+| Commit | `57ef872` (`sunwatch` branch) |
+| Image | `sunwatch-sunwatch:latest` = `sha256:81a0177be5d06c4310513b66d4bbebba27642fa73c01317cfc30582fbcfa7b99`, also tagged `sunwatch-sunwatch:57ef872` |
+| Rollback images | `sunwatch-sunwatch:6287c1a` (globe without FL511), `sunwatch-sunwatch:b90a0de` (Leaflet) |
+| Container | `sunwatch-sunwatch-1`, healthy, 0 restarts; network `nextcloud_network`; volume `sunwatch_sunwatch-cache` kept |
+
+Verification (public URL):
+
+- `/api/cctv/sources`: 4,960 sources, all `fl511-*`. Nearest to Aloma: `fl511-892/890/919` (1.3–1.9 km); nearest to Charlotte Harbor: `fl511-394/379/390` (~5 km).
+- `/api/cctv/frame/fl511-892` and `fl511-394` returned `200 image/jpeg`; visually live FDOT imagery (US-17/92 at Fairbanks; I-75 S at MM 168.4).
+- Headless Chrome: Charlotte Harbor → Surroundings → CAMERAS ON. Camera icons rendered on nearby roads; frame requests for fl511-400/394/388/80/389/379/367 all `200`; CCTV panel showed a live FDOT snapshot ("SNAPSHOT · OK"). The only console error remains the expected local-receiver `404`.
+- Known: the CCTV panel's initially featured camera is catalog `fl511-1` (I-75 MM 51.7, Alligator Alley), not the camera nearest the selected branch; use NEAREST. FL511 titles are empty, so cameras display as "Florida traffic camera N". Headings are uncalibrated (0°).
+
+Rollback: `git checkout 6287c1a && docker tag sunwatch-sunwatch:6287c1a sunwatch-sunwatch:latest && docker-compose -p sunwatch -f compose.sunwatch.yml up -d --no-build`.
+
+### Previous: God's Eye globe rebuild — `6287c1a`
+
+Deployed **2026-09-27 22:40 UTC** from John's Mac as `claude@port.jsbjr.digital`, replacing the `b90a0de` Leaflet build in place (same directory, project, domain and network). Superseded by `57ef872` at 22:52 UTC.
 
 | Item | Value |
 | --- | --- |

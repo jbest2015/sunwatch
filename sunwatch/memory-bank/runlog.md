@@ -54,3 +54,10 @@ The deployment record above describes the old b90a0de Leaflet build; both histor
 - Headless Chrome + WebGL: globe, logo, aircraft (200), traffic, Charlotte Harbor fly-to and point weather, Nearby, address add/note persistence (test data removed), and all Live Layers toggles ON. Mobile loads with no horizontal overflow.
 - Known: one expected 404 probe for the excluded local ADS-B receiver route. CCTV sources are upstream's (Austin, TxDOT, Caltrans, London, etc.); the server log lists no Florida camera feed, so Cameras shows non-Florida feeds. Mobile panel covers much of the globe.
 
+## 2026-09-27 — Florida FL511 cameras deployed to Aech
+
+- Pulled `57ef872` (FL511 camera provider) fast-forward; no env changes. Built, then swapped. Image `sha256:81a0177b…7b99`, tagged `sunwatch-sunwatch:57ef872`; `6287c1a` and `b90a0de` images retained.
+- Container healthy, 0 restarts. `/api/cctv/sources` returns 4,960 `fl511-*` cameras only; sample frames near Aloma and Charlotte Harbor return live FDOT JPEGs.
+- Browser: CAMERAS ON near Charlotte Harbor shows nearby camera icons and a live snapshot; all nearby frame requests 200.
+- Follow-ups: panel initially features `fl511-1` (Alligator Alley) rather than the nearest camera; FL511 titles are blank so names are generic; headings uncalibrated.
+
