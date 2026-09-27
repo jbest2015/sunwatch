@@ -9,7 +9,7 @@ Prepared September 27, 2026 for deployment from a machine with Aech SSH access.
 | Branch | `sunwatch` (default branch) |
 | Server | `port.jsbjr.digital` (Aech), deployed as `claude` (docker group) |
 | Deployed directory | `/home/claude/sunwatch` (`/home/sammy` is not writable by `claude`) |
-| Status | **Old Leaflet build deployed; globe rebuild pending** — see [Deployment record](#deployment-record) |
+| Status | **God's Eye globe rebuild (`6287c1a`) deployed to Aech September 27, 2026** — see [Deployment record](#deployment-record) |
 
 ## Ready to deploy
 
@@ -130,7 +130,35 @@ After a successful deployment, update this memo and [runlog](sunwatch/memory-ban
 
 ## Deployment record
 
-Deployed **2026-09-27 20:21 UTC** from John's Mac.
+### Current: God's Eye globe rebuild — `6287c1a`
+
+Deployed **2026-09-27 22:40 UTC** from John's Mac as `claude@port.jsbjr.digital`, replacing the `b90a0de` Leaflet build in place (same directory, project, domain and network).
+
+| Item | Value |
+| --- | --- |
+| Commit | `6287c1a1f7d5d18087c428c0e7134ee02e4d95a0` (`sunwatch` branch) |
+| Directory | `/home/claude/sunwatch` (`git pull --ff-only` from `2f6e415`) |
+| Configuration | Appended `CESIUM_ION_TOKEN` from `sunwatch/.env.deploy` to the existing `sunwatch/.env` (mode 600); root `.env` unchanged (`AECH_PROXY_NETWORK=nextcloud_network`) |
+| Image | `sunwatch-sunwatch:latest` = `sha256:50d36b9949394877168fd26e771f07271ddf91fe53d9177c187f4893f9c8b55d` (437 MB), also tagged `sunwatch-sunwatch:6287c1a` |
+| Rollback image | `sunwatch-sunwatch:b90a0de` (`sha256:8029780ad2ad…`, Leaflet build) retained |
+| Container | `sunwatch-sunwatch-1`, healthy, 0 restarts, ~265 MiB of 1 GiB after layers loaded |
+| Volume | `sunwatch_sunwatch-cache` → `/app/sunwatch/.gev-cache` (created on this deploy) |
+| Network / TLS | `nextcloud_network`; existing Let's Encrypt certificate reused |
+
+Build used standalone `docker-compose build`, then `up -d --no-build`, so the old container served traffic until the swap. Proxy `nginx -t` passed afterward; neighbor sites responded normally.
+
+Verification (public URL, normal TLS verification):
+
+- `/api/health`, `/runtime-config.js`, `/api/locations`, `/api/branches`, `/api/alerts`, `/api/forecast`, `/api/weather/manifest?product=radar`, `/api/cyclones`, `/api/fires`, `/api/geocode` all `200`. `/api/locations`: 169 records (81 branches, 88 ATMs; 156 mapped). `/.env`, `/sunwatch/.env`, `/sunwatch/.env.deploy`, `/.gev-cache/` all `404`. The runtime config exposes only the Cesium browser token, as intended.
+- Headless Chrome with WebGL (desktop 1600×1000): Cesium globe, tactical SunWatch logo, "81 BRANCHES / 88 ATMs", 169 list rows. Aircraft enabled by default and reported 200 records; street traffic rendered on roads. Charlotte Harbor search → fly-to; Street Area view shows the branch marker with traffic; point forecast and NWS alerts loaded. Nearby (10 km) returned 7 locations. Address lookup added a test location; it and a test note survived reload, then both were removed. Radar, hurricanes, wind, cameras and fire detections all switched ON from the Live Layers panel.
+- Mobile 390×844: loads, no horizontal overflow; the location panel overlays much of the globe HUD.
+- Console: one expected `404` for `/api/local-receivers/aircraft`. The server deliberately omits the local ADS-B receiver proxy; the client probes it once.
+
+Rollback to the Leaflet build: `cd /home/claude/sunwatch && git checkout b90a0de && docker tag sunwatch-sunwatch:b90a0de sunwatch-sunwatch:latest && docker-compose -p sunwatch -f compose.sunwatch.yml up -d --no-build`. The `sunwatch-cache` volume can stay; the Leaflet build ignores it.
+
+### Previous: Leaflet prototype — `b90a0de`
+
+Deployed **2026-09-27 20:21 UTC** from John's Mac. Superseded by `6287c1a` at 22:40 UTC.
 
 | Item | Value |
 | --- | --- |
