@@ -2,6 +2,8 @@
 
 ## Current God's Eye globe rebuild
 
+Florida camera follow-up: added the official public FL511 map catalog and JPEG snapshot endpoint. Two parser/failure tests passed. Rebuilt Docker container returned 4,960 Florida cameras. The three nearest catalog cameras to Aloma (fl511-892, fl511-890, fl511-919) all returned JPEGs through the app proxy and reported upstream snapshot active. Visually inspected fl511-892: US-17/92 at Fairbanks road imagery, not a placeholder. This does not establish availability of every camera.
+
 - Production Vite build passed. Expected warnings: runtime configuration is an external classic script; the Cesium application has large chunks.
 - 27 focused tests passed across SunWatch location filtering/import validation, traffic navigation and flight records/lifecycle. The earlier combined ALPR/traffic/location run also passed (24 tests).
 - Multi-stage Docker build passed after including the provider helper scripts. Container is healthy, with the persistent provider-cache volume and unprivileged runtime.

@@ -40,6 +40,8 @@ See [deployment memo](DEPLOY.sunwatch.md) and [validation](sunwatch/VALIDATION.m
 
 ## Data and coverage
 
+Florida cameras: CAMERAS now loads the public FL511 statewide camera catalog and refreshing JPEG snapshots, without another key. SunWatch defaults to `CCTV_REGION=florida` and a 5,000-record ceiling; set `CCTV_REGION=global` to include the other upstream regions. The catalog currently has 4,960 records. Camera headings/mounting poses are uncalibrated, and individual feeds can be offline. These are snapshots, not continuous video or private Flock feeds.
+
 Official directory: https://locations.suncoastcreditunion.com, collected September 27, 2026. Branch coordinates come from official records. Of 88 ATM records, 75 have address-estimated coordinates and 13 require address review before mapping. Directory records may include ATMs colocated with branches. Published schedules do not confirm storm opening status.
 
 Traffic dots visualize measured TomTom road flow; they are not tracked individual vehicles. Flight coverage depends on public receivers and can use a labeled fallback feed or stale cache. Public ALPR markers describe camera locations, not access to camera feeds; public CCTV coverage varies and is not comprehensive in Florida. Weather comes from NWS, NOAA and NHC; NASA heat detections are neither confirmed fire incidents nor fire perimeters. Provider attribution remains visible in the globe. The optional noncommercial submarine-cable dataset is excluded.

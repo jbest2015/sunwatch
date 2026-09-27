@@ -254,6 +254,10 @@ app.get(
     }
   }),
 );
+// Prioritize statewide Florida coverage instead of filling the catalog with
+// unrelated global feeds. Operators can set CCTV_REGION=global to restore them.
+process.env.CCTV_REGION ??= 'florida';
+process.env.CCTV_MAX_SOURCES ??= '5000';
 for (const plugin of [...localProviderPlugins(), alprDatasetProxy()].filter(
   (p) =>
     ![
