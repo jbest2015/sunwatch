@@ -36,7 +36,7 @@ export function createStandaloneLayerSources() {
     installations: createInstallationSource(),
     satellites: createSatelliteSource(),
     launches: createLaunchSource(),
-    alpr: createOverpassAlprSource(),
+    alpr: createOverpassAlprSource({ usePublishedDataset: true }),
     firms: createFirmsSource(),
     wind: createWindSource(),
     weather: createWeatherSource(),

@@ -1,5 +1,19 @@
 # Validation — September 27, 2026
 
+## Current God's Eye globe rebuild
+
+- Production Vite build passed. Expected warnings: runtime configuration is an external classic script; the Cesium application has large chunks.
+- 27 focused tests passed across SunWatch location filtering/import validation, traffic navigation and flight records/lifecycle. The earlier combined ALPR/traffic/location run also passed (24 tests).
+- Multi-stage Docker build passed after including the provider helper scripts. Container is healthy, with the persistent provider-cache volume and unprivileged runtime.
+- All 12 HTTP smoke checks listed below passed again against the rebuilt container. Additional checks returned 169 directory records, 156 mapped records, runtime Cesium configuration and configured TomTom status.
+- Browser: tactical logo visible in the original globe HUD. Selected Citrus Park, then a nearby Odessa ATM; both camera jumps and point forecast panels worked. Clearing search and selecting Nearby showed seven locations within 10 km of Citrus Park.
+- Browser: aircraft feed reported 200 records; traffic rendered on roads; radar toggle enabled. This is not a comprehensive validation of every upstream layer or every Florida camera feed.
+- Screenshot inspection confirmed satellite imagery, road traffic and SunWatch markers inside the tactical globe. Container-served startup showed the logo and 81 branches / 88 ATMs, with satellite mode selected.
+- Photorealistic 3D produced sluggish/unresponsive previews on this machine. The default is now satellite imagery on the Cesium globe; photorealistic mode remains optional and needs performance testing on the demo machine. Removed synchronous per-road 3D height picks, reduced detailed aircraft range/cap, and bounded tile cache/frame rate.
+- No Aech deployment or public HTTPS verification has occurred.
+
+## Earlier Leaflet prototype checks (historical)
+
 Local Node 24 and Docker Desktop Linux-engine checks completed.
 
 - `node --test test.mjs`: 5 tests passed. Covers invalid/blank coordinates, untrusted-text escaping, status filters, polygon holes, and 81 valid unique source locations.

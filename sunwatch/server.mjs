@@ -3,10 +3,12 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseFirmsCsv, filterTrailing24h } from '../src/data/firmsCsv.js';
-import { cycloneProxy } from '../server/providers/cyclones.js';
-import { weatherProxy } from '../server/providers/weather.js';
+import { localProviderPlugins } from '../server/providers/local.js';
+import { alprDatasetProxy } from '../server/providers/alpr.js';
+import { createServer } from 'node:http';
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+const httpServer = createServer(app);
 app.disable('x-powered-by');
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -77,6 +79,32 @@ app.get('/api/branches', (_q, r) =>
   r.sendFile(path.join(dir, 'data/branches.json')),
 );
 app.get(
+  '/api/locations',
+  wrap(async (_q, r) => {
+    const [branches, atms] = await Promise.all(
+      ['branches', 'atms'].map(async (name) =>
+        JSON.parse(
+          await fs.readFile(path.join(dir, 'data', name + '.json'), 'utf8'),
+        ),
+      ),
+    );
+    r.json({
+      schema_version: 2,
+      locations: [...branches.locations, ...atms.locations],
+    });
+  }),
+);
+app.get('/runtime-config.js', (_q, r) => {
+  r.set('Cache-Control', 'no-store');
+  r.type('application/javascript').send(
+    'window.__SUNWATCH_CONFIG__=' +
+      JSON.stringify({
+        cesiumToken: process.env.CESIUM_ION_TOKEN || '',
+      }).replaceAll('<', '\\u003c') +
+      ';',
+  );
+});
+app.get(
   '/api/alerts',
   wrap(async (q, r) => {
     let point;
@@ -126,12 +154,10 @@ app.use('/api/geocode', (_q, r, next) => {
     geoDailyCalls = 0;
   }
   if (++geoDailyCalls > 500)
-    return r
-      .status(429)
-      .json({
-        error:
-          'Daily address lookup allowance reached. Import coordinates or try tomorrow.',
-      });
+    return r.status(429).json({
+      error:
+        'Daily address lookup allowance reached. Import coordinates or try tomorrow.',
+    });
   next();
 });
 app.get(
@@ -141,12 +167,9 @@ app.get(
     if (query.length < 5 || query.length > 250)
       return r.status(400).json({ error: 'Enter a full street address.' });
     if (!process.env.TOMTOM_API_KEY)
-      return r
-        .status(503)
-        .json({
-          error:
-            'Address lookup is not configured. Import coordinates instead.',
-        });
+      return r.status(503).json({
+        error: 'Address lookup is not configured. Import coordinates instead.',
+      });
     if (Date.now() - geoWindow > 60000) {
       geoWindow = Date.now();
       geoCalls = 0;
@@ -231,8 +254,15 @@ app.get(
     }
   }),
 );
-for (const plugin of [cycloneProxy(), weatherProxy()])
-  plugin.configureServer({ middlewares: app });
+for (const plugin of [...localProviderPlugins(), alprDatasetProxy()].filter(
+  (p) =>
+    ![
+      'gev-key-setup',
+      'openai-realtime-proxy',
+      'local-receivers-proxy',
+    ].includes(p.name),
+))
+  plugin.configurePreviewServer?.({ middlewares: app, httpServer });
 app.use(
   '/vendor/leaflet',
   express.static(path.join(dir, 'node_modules/leaflet/dist')),
@@ -240,10 +270,10 @@ app.use(
 app.get('/vendor/papaparse.js', (_q, r) =>
   r.sendFile(path.join(dir, 'node_modules/papaparse/papaparse.min.js')),
 );
-app.use(express.static(path.join(dir, 'public'), { maxAge: 300000 }));
+app.use(express.static(path.join(dir, 'dist'), { maxAge: 300000 }));
 app.use('/api', (_q, r) => r.status(404).json({ error: 'Unknown API route' }));
 app.use((_q, r) => r.status(404).send('Not found'));
-app.listen(
+httpServer.listen(
   Number(process.env.PORT || 4180),
   process.env.HOST || '127.0.0.1',
   () => console.log('SunWatch listening on ' + (process.env.PORT || 4180)),

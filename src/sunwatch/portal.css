@@ -1,0 +1,486 @@
+.sunwatch-brand {
+  width: 255px;
+  height: 85px;
+  object-fit: contain;
+  mix-blend-mode: screen;
+}
+.sunwatch-loader-brand {
+  width: 420px;
+  max-width: 80vw;
+  mix-blend-mode: screen;
+}
+#title-bar .subtitle {
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  margin-top: -4px;
+}
+.sunwatch-portal #title-bar {
+  top: 18px;
+  left: 22px;
+}
+.sunwatch-portal #title-bar h1 {
+  margin: 0;
+}
+.sunwatch-portal #welcome-dialog,
+.sunwatch-portal #key-setup-open {
+  display: none !important;
+}
+#sw-network {
+  --sw-line: #4bbccc35;
+  --sw-text: #d5ebef;
+  --sw-cyan: #55e4ed;
+  position: fixed;
+  z-index: 210;
+  left: 22px;
+  top: 137px;
+  bottom: 135px;
+  width: 304px;
+  max-height: calc(100dvh - 220px);
+  color: var(--sw-text);
+  background: linear-gradient(145deg, #071017f2, #08161eee);
+  border: 1px solid var(--sw-line);
+  border-top: 2px solid #57dfec9c;
+  border-radius: 5px;
+  box-shadow:
+    0 8px 35px #0009,
+    0 0 22px #1cadbc0c;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(14px);
+}
+#sw-network * {
+  box-sizing: border-box;
+}
+#sw-network button,
+#sw-add-dialog button {
+  font-family: inherit;
+  color: #83e6ee;
+  font-size: 9px;
+  cursor: pointer;
+  border: 1px solid #4bbccc3a;
+  border-radius: 3px;
+  background: #11222c;
+  padding: 8px;
+}
+#sw-network button:hover,
+#sw-add-dialog button:hover {
+  background: #183640;
+  border-color: #62dae9;
+}
+#sw-network button:focus-visible,
+#sw-network input:focus-visible,
+#sw-network select:focus-visible,
+#sw-add-dialog :focus-visible {
+  outline: 2px solid #ffbf62;
+  outline-offset: 2px;
+}
+#sw-network button:disabled {
+  opacity: 0.5;
+}
+.sw-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 14px;
+  border-bottom: 1px solid #4bbccc35;
+  flex: none;
+}
+.sw-head h2 {
+  font:
+    600 13px 'JetBrains Mono',
+    monospace;
+  letter-spacing: 1.8px;
+  margin: 5px 0 0;
+  color: #ddf9fc;
+}
+.sw-kicker {
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: #ddaa58;
+}
+#sw-network #sw-collapse {
+  padding: 2px 8px;
+  font-size: 20px;
+  background: transparent;
+  border: 0;
+}
+#sw-body {
+  overflow: auto;
+  padding: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #294c58 #08141c;
+}
+#sw-summary {
+  color: #a0b7bd;
+  letter-spacing: 0.5px;
+  font-size: 8px;
+  margin-bottom: 12px;
+}
+#sw-network input,
+#sw-network select,
+#sw-network textarea,
+#sw-add-dialog input,
+#sw-add-dialog select {
+  font:
+    10px 'JetBrains Mono',
+    monospace;
+  background: #030b11;
+  color: #d7eff2;
+  border: 1px solid #365561;
+  border-radius: 3px;
+  padding: 9px;
+  width: 100%;
+  min-width: 0;
+}
+#sw-search {
+  height: 36px;
+}
+#sw-network select option,
+#sw-add-dialog select option {
+  background: #07141d;
+}
+.sw-filters {
+  display: flex;
+  gap: 7px;
+  margin: 8px 0;
+}
+.sw-filters select {
+  width: 50% !important;
+}
+.sw-actions {
+  display: flex;
+  gap: 5px;
+  margin: 9px 0;
+}
+.sw-actions > * {
+  flex: 1;
+}
+#sw-network .sw-actions select {
+  width: 65px;
+  flex: 0 0 65px;
+  padding: 5px;
+  font-size: 9px;
+}
+#sw-near[aria-pressed='true'] {
+  color: #ffc36a;
+  background: #45361c;
+}
+.sw-list-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--sw-line);
+  padding-top: 12px;
+  margin-top: 12px;
+  color: #809da7;
+  font-size: 8px;
+}
+#sw-network .sw-list-head button {
+  font-size: 8px;
+  border: 0;
+  padding: 4px;
+  background: transparent;
+}
+#sw-list {
+  max-height: 230px;
+  min-height: 50px;
+  overflow: auto;
+  scrollbar-width: thin;
+  margin-top: 6px;
+}
+#sw-network .sw-row {
+  display: flex;
+  width: 100%;
+  text-align: left;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-bottom: 1px solid #4bbccc20;
+  border-radius: 0;
+  background: transparent;
+  padding: 11px 3px;
+}
+.sw-row > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.sw-row strong {
+  display: block;
+  color: #d9edf0;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.sw-row small {
+  display: block;
+  color: #7895a2;
+  font-size: 8px;
+  line-height: 1.65;
+}
+.sw-kind {
+  font-size: 8px;
+  color: #58e3eb;
+  border: 1px solid #58e3eb66;
+  padding: 4px;
+  border-radius: 2px;
+}
+.sw-kind.atm {
+  color: #edb760;
+  border-color: #edb76066;
+}
+#sw-network .sw-row.selected {
+  background: #153c4588;
+  border-left: 2px solid #65e9ee;
+  padding-left: 6px;
+}
+.sw-row > b {
+  color: #7bb3be;
+  font-weight: 400;
+}
+.sw-collapsed {
+  bottom: auto !important;
+}
+.sw-collapsed #sw-body {
+  display: none;
+}
+#sw-focus {
+  margin: 13px 0;
+  padding: 12px 10px;
+  background: #061017;
+  border: 1px solid #53bacb66;
+  border-left: 2px solid #eeae56;
+}
+.sw-focus-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #e8ba73;
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+#sw-network #sw-focus-close {
+  padding: 0 4px;
+  font-size: 18px;
+  border: 0;
+  background: none;
+}
+#sw-focus h3 {
+  font-size: 13px;
+  font-weight: 500;
+  margin: 8px 0;
+  color: #e6f8ff;
+}
+#sw-focus p {
+  font-size: 9px;
+  line-height: 1.7;
+  color: #9eb9c1;
+}
+#sw-network #sw-focus .sw-actions button {
+  font-size: 7px;
+  padding: 7px 3px;
+}
+#sw-focus a {
+  color: #75d6de;
+  font-size: 9px;
+  text-decoration: none;
+  display: block;
+  margin-top: 10px;
+}
+#sw-focus label {
+  display: block;
+  margin: 8px 0;
+}
+#sw-notes {
+  height: 65px;
+  resize: vertical;
+  margin: 7px 0;
+}
+#sw-network details > summary {
+  cursor: pointer;
+  letter-spacing: 0.7px;
+  color: #badde5;
+  padding: 11px 0;
+  font-size: 9px;
+}
+#sw-overlays {
+  border-top: 1px solid var(--sw-line);
+  margin-top: 13px;
+}
+#sw-overlays summary > span {
+  display: block;
+  font-size: 7px;
+  color: #75939e;
+  margin-top: 5px;
+  letter-spacing: 0;
+}
+#sw-quick-layers label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 31px;
+  cursor: pointer;
+}
+#sw-quick-layers input {
+  width: 12px;
+  height: 12px;
+  accent-color: #52cfdf;
+  margin: 0;
+  padding: 0;
+}
+#sw-quick-layers span {
+  font-size: 9px;
+}
+#sw-quick-layers small {
+  font-size: 7px;
+  color: #7296a4;
+  max-width: 84px;
+  text-align: right;
+  margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sw-note {
+  font-size: 8px !important;
+  color: #72909b !important;
+  line-height: 1.65;
+}
+.sw-footer {
+  border-top: 1px solid var(--sw-line);
+  padding-top: 10px;
+  margin-top: 12px;
+}
+.sw-footer span {
+  display: block;
+  color: #668795;
+  font-size: 7px;
+  margin-top: 7px;
+}
+.sw-weather {
+  border: 1px solid #315663;
+  background: #102a36;
+  padding: 10px;
+  margin-top: 12px;
+}
+.sw-weather strong {
+  font-size: 10px;
+  font-weight: 500;
+}
+.sw-weather small {
+  display: block;
+  font-size: 8px;
+  color: #8eafbc;
+  margin-top: 6px;
+}
+.sw-warning {
+  background: #67441c44;
+  border: 1px solid #b8874380;
+  padding: 5px 9px;
+  color: #ffcc83;
+  font-size: 9px;
+  line-height: 1.6;
+}
+#sw-add-dialog {
+  width: 490px;
+  max-width: 94vw;
+  max-height: 85dvh;
+  overflow: auto;
+  border: 1px solid #55cede88;
+  border-radius: 6px;
+  background: #07121c;
+  color: #cde6ee;
+  padding: 18px;
+  font:
+    11px 'JetBrains Mono',
+    monospace;
+  box-shadow: 0 15px 90px #0009;
+}
+#sw-add-dialog::backdrop {
+  background: #0009;
+  backdrop-filter: blur(4px);
+}
+#sw-add-dialog .sw-head {
+  padding: 0 0 14px;
+}
+#sw-add-dialog p {
+  line-height: 1.7;
+}
+#sw-add-dialog label {
+  display: block;
+  margin: 13px 0;
+  color: #9dbac7;
+}
+#sw-add-dialog input,
+#sw-add-dialog select {
+  display: block;
+  margin-top: 7px;
+}
+#sw-add-dialog hr {
+  border: 0;
+  border-top: 1px solid #315665;
+  margin: 20px 0;
+}
+#sw-add-dialog .sw-result {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  text-align: left;
+  line-height: 1.6;
+}
+#sw-import-review {
+  max-height: 200px;
+  overflow: auto;
+}
+@media (max-height: 800px) {
+  #sw-network {
+    top: 121px;
+    bottom: 115px;
+    max-height: calc(100dvh - 190px);
+  }
+  #sw-list {
+    max-height: 170px;
+  }
+  .sunwatch-brand {
+    width: 230px;
+    height: 72px;
+  }
+  #sw-body {
+    padding: 10px;
+  }
+  #sw-focus {
+    margin-block: 10px;
+  }
+}
+@media (max-width: 800px) {
+  #sw-network {
+    left: 10px;
+    top: 109px;
+    width: 275px;
+    bottom: 135px;
+    max-height: calc(100dvh - 244px);
+  }
+  .sunwatch-portal #title-bar {
+    left: 10px;
+    top: 10px;
+  }
+  .sunwatch-brand {
+    width: 210px;
+    height: 70px;
+  }
+  #sw-list {
+    max-height: 150px;
+  }
+  #sw-network.sw-collapsed {
+    width: 210px;
+  }
+  .sw-head {
+    padding: 9px 12px;
+  }
+  .sw-head h2 {
+    font-size: 11px;
+  }
+  .sw-kicker {
+    font-size: 7px;
+  }
+}

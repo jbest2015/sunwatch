@@ -13,7 +13,7 @@ Prepared September 27, 2026 for deployment from a machine with Aech SSH access.
 
 ## Ready to deploy
 
-The app includes 81 official Suncoast branch records, the SunWatch logo, address lookup/import, branch selection, browser-local status notes, and NWS/NOAA/NHC/NASA weather overlays. Five unit tests, twelve container endpoint checks, desktop/mobile browser checks and import/persistence checks passed. See [validation](sunwatch/VALIDATION.md).
+Deploy the latest `sunwatch` branch. This rebuild supersedes the Leaflet prototype at `b90a0de`: SunWatch now runs the original God's Eye Cesium globe with tactical branding, live aircraft/traffic/environmental layers and a Suncoast location panel. It includes 81 branches and 88 ATM records; 75 ATMs have estimated coordinates and 13 need address review. See [validation](sunwatch/VALIDATION.md) for current checks and remaining limitations.
 
 DNS resolved both `sunwatch.johnbest.ai` and `port.jsbjr.digital` to `64.111.21.67` at the final September 27 check. Recheck before certificate issuance. This Windows machine lacked the documented SSH key; no Aech deployment or server changes were performed.
 
@@ -70,7 +70,7 @@ Set the **root** `.env` to the actual network name:
 AECH_PROXY_NETWORK=REPLACE_WITH_VERIFIED_EXISTING_PROXY_NETWORK
 ```
 
-There are two configuration files: root `.env` supplies the Compose network; `sunwatch/.env` supplies the application settings. The checked-in [sunwatch/.env.deploy](sunwatch/.env.deploy) contains the TomTom and NASA FIRMS keys **at the owner's explicit request**. Copying it as above configures both integrations. These keys are publicly available and can be used against the owner's service quotas. No SSH, GitHub, Cesium, Google, AI, voice or AIS credentials are included.
+There are two configuration files: root `.env` supplies the Compose network; `sunwatch/.env` supplies application settings. The checked-in [sunwatch/.env.deploy](sunwatch/.env.deploy) contains TomTom, NASA FIRMS and the Cesium browser token **at the owner's explicit request**. These keys are publicly usable against the owner's quotas. No SSH, GitHub, direct Google, AI, voice or AIS credentials are included. For an existing checkout, add `CESIUM_ION_TOKEN` from the deployment config to the existing application environment without overwriting other settings.
 
 The runtime `.env` files remain ignored. The published deployment config is excluded from the container image and from the app's static web directory; it is public through GitHub. Provider-side limits are the appropriate place to enforce account-wide usage caps.
 
@@ -86,7 +86,7 @@ docker compose -p sunwatch -f compose.sunwatch.yml logs --tail=80 sunwatch
 
 The Dockerfile already passed local testing. The production Compose file exposes 4180 only inside the existing proxy network; it does not publish another host port. Its `VIRTUAL_HOST`, `VIRTUAL_PORT` and `LETSENCRYPT_HOST` settings target this domain. The existing proxy/certificate companion should handle HTTPS.
 
-The container uses Node 24 Alpine, runs unprivileged, and has a read-only filesystem, memory limit, capped logs and health check. Aech's actual Docker/kernel compatibility remains unverified. If startup fails, inspect the error before changing host settings.
+The multi-stage image builds the root Vite/Cesium frontend into `sunwatch/dist`, then serves it through `sunwatch/server.mjs`. The container uses Node 24 Alpine, runs unprivileged, and has a read-only filesystem, 1 GB memory limit, capped logs and health check. Its named `sunwatch-cache` volume permits persistent provider caches and traffic budget counters under `/app/sunwatch/.gev-cache`. Do not remove that volume during routine upgrades. Aech's Docker/kernel compatibility remains unverified.
 
 ## 5. Verify the container and public site
 
@@ -109,9 +109,10 @@ Expected: health JSON with `ok: true`, then two `404` responses. If internal hea
 
 Open the public site and verify:
 
-- Logo and 81 branches load; searching/selecting Charlotte Harbor zooms to its address.
+- The tactical SunWatch logo and 3D globe load, with 81 branches / 88 ATMs. Selecting a mapped branch or ATM flies to it without clearing active layers.
+- Traffic and aircraft render around the selected location. Traffic dots illustrate measured flow, not individually tracked cars. Test Nearby and the street/surroundings/airspace camera buttons.
 - Point forecasts and alert responses load; radar, hurricane and fire toggles show timestamps and clear errors when providers fail. Counts change over time.
-- Address lookup returns candidates. Satellite and street basemaps work.
+- Address lookup returns candidates. Satellite and street-label map modes work; test optional photorealistic 3D separately on the demo machine. The globe uses client-side WebGL, so a faster server alone does not fix slow rendering.
 - A temporary imported location and test note survive reload; remove the test location afterward.
 - Mobile layout works and there are no unexpected browser console errors.
 
@@ -133,4 +134,4 @@ This is an independent preview, not an official Suncoast operations system. Publ
 
 Imports and status notes live in **each browser**, not a shared server database. Local-preview data does not automatically migrate to the public hostname. JSON exports include notes, but the importer currently restores locations only. Shared status, authentication, audit history and internal operational integrations remain future work.
 
-Address lookup sends addresses to TomTom through the backend. App limits are 20 requests/minute and 500 requests/UTC day per running process; restarts reset those counters, and requests using the published key directly bypass app limits. No paid AI, voice or direct Google billing is enabled.
+Address lookup sends addresses to TomTom through the backend. App limits are 20 requests/minute and 500 requests/UTC day per running process; restarts reset those counters, and requests using the published key directly bypass app limits. No paid AI, voice or direct Google billing is enabled. Photorealistic tiles use the existing Cesium ion asset access; service quotas and applicable account terms still apply. Public camera coverage varies; ALPR markers represent locations, not camera access. The optional noncommercial submarine-cable dataset is not included.

@@ -1,7 +1,7 @@
 import { catalogControlServices } from './catalog.js';
 import { StyleManager } from '../ui/composition.js';
-import { flyToAustin } from '../camera.js';
 import { initCockpitCloudEffects } from '../cockpitCloudEffects.js';
+import * as Cesium from 'cesium';
 
 /** Construct the existing controls and camera presentation. */
 export function createApplicationControls({
@@ -27,6 +27,9 @@ export function createApplicationControls({
     mapStackController,
     placeSearch,
   });
+  // SunWatch uses source-backed readouts without an AI subscription.
+  if (styleManager.hud?.summaryPolicy)
+    styleManager.hud.summaryPolicy.canRequest = () => false;
   defer(() => styleManager.orbitController.stop());
   defer(() => styleManager.hud.destroy());
   defer(() => styleManager.dispose());
@@ -39,10 +42,13 @@ export function createApplicationControls({
   });
   defer(() => cockpitCloudEffects?.destroy());
 
-  // If no share link state, do default fly-to Austin
+  // Start at the Florida network unless restoring a shared camera.
   if (!styleManager.hasShareState) {
-    loaderStatus.textContent = 'Flying to Austin, TX...';
-    defer(flyToAustin(viewer));
+    loaderStatus.textContent = 'Opening Suncoast network, Florida...';
+    viewer.camera.setView({
+      destination: Cesium.Cartesian3.fromDegrees(-82.2, 28.0, 420000),
+      orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
+    });
   } else {
     loaderStatus.textContent = 'Restoring shared view...';
   }

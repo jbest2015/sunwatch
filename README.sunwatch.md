@@ -1,66 +1,53 @@
-# SunWatch
+# SunWatch — Suncoast live location portal
 
-![SunWatch](sunwatch/public/sunwatch-logo.png)
+![SunWatch](public/sunwatch-logo-tactical.png)
 
-A lightweight branch-network and hurricane-awareness preview, starting with 81 Suncoast Credit Union locations in 20 Florida counties. Built for John Best's Innovation Club demonstration. This is an independent prototype, not an official Suncoast service or a replacement for emergency-management systems.
+SunWatch puts Suncoast locations into the original God's Eye Cesium globe: its tactical HUD, camera navigation, aircraft, traffic and environmental layers, with a searchable branch/ATM panel. This rebuild replaces the earlier Leaflet prototype.
 
-## Included
+## Explore
 
-- Search branches by name, city, address or ZIP; filter by county or user-entered status.
-- Click a branch to zoom to its address, see published hours and services, and retrieve point-specific NWS alerts and forecasts.
-- Toggle NWS alert boundaries, observed NOAA radar, NHC hurricane tracks/cones, NASA satellite heat detections, and satellite imagery.
-- Add an address using server-side TomTom geocoding and confirm its match. Import CSV/JSON/GeoJSON coordinates, or review address-only CSV rows one by one.
-- Record manual operational status and notes. Export locations and notes as JSON.
-- Responsive interface, SunWatch logo, container health check, and server-side API keys.
+- Search 81 branches and 88 additional ATM directory records across 20 Florida counties. Select a mapped location to fly there while keeping your active layers.
+- Switch between street-scale, surroundings and airspace views. Nearby filters branches/ATMs within 5–50 km of the selected location or viewed area.
+- Toggle aircraft, TomTom traffic flow, rain radar, hurricanes, wind, public cameras and NASA heat detections; additional original layers remain in DATA LAYERS.
+- View location-specific NWS alerts and forecasts. Add your own addresses, review geocoding matches, import coordinates and export locations.
+- Keep manual operating status and notes locally in your browser. Unknown means unverified, never automatically open or closed.
 
-The first version uses a fast 2D street map. No Google Maps billing, voice, AI subscription, or Cesium token is required. The original God's Eye application remains in this fork for reference; SunWatch runs separately from `sunwatch/`.
+Satellite imagery is the default inside the 3D globe. The original map selector also offers street labels and photorealistic 3D via Cesium ion. No voice, paid AI service or direct Google API key is enabled. Detailed aircraft models are bounded to the nearby area to control rendering load.
 
-## Run
+## Run locally
 
-Use Node 24 or newer:
+Node 24+ is required. From the repository root:
 
 ```sh
+npm ci --ignore-scripts
 cd sunwatch
 npm ci
 cp .env.deploy .env
-# Or use .env.example and supply your own optional TomTom/NASA keys.
-npm test
+npm run build
 npm start
 ```
 
-Open http://localhost:4180. `HOST=0.0.0.0` allows LAN access if the host firewall permits TCP 4180. Missing optional keys disable only their respective features. NWS alerts/forecasts, NHC tracks, NOAA radar and street maps do not require keys.
+Open http://localhost:4180. `HOST=0.0.0.0` permits LAN connections if the host firewall allows them. Runtime `.env` is ignored. At the owner's explicit request, `.env.deploy` contains TomTom, NASA FIRMS and Cesium data keys. The Cesium browser token is delivered at runtime, rather than compiled into the bundle.
 
-Test the same Docker image used in production:
+From the root, test the deployment image with:
 
 ```sh
-docker compose -f compose.sunwatch.local.yml up --build -d
-# Open http://127.0.0.1:4181 and verify the UI and /api/health.
-docker compose -f compose.sunwatch.local.yml down
+docker compose -p sunwatch-local -f compose.sunwatch.local.yml up --build -d
+# http://127.0.0.1:4181
 ```
 
-## Data and boundaries
+See [deployment memo](DEPLOY.sunwatch.md) and [validation](sunwatch/VALIDATION.md). Aech deployment remains pending access from another machine.
 
-- Seed directory: https://locations.suncoastcreditunion.com, collected September 27, 2026. Branch IDs are public directory IDs, not verified internal branch numbers. Hours are published regular schedules, not confirmed current openings.
-- Alerts/forecasts: https://api.weather.gov. Some zone-based alerts do not have polygons. The statewide alert count can exceed the number of visible polygons; selecting a branch makes a point-specific alert request.
-- Radar: NOAA nowCOAST MRMS reflectivity, with observation time displayed. It is an observation, not a rain forecast.
-- Cyclones: NOAA NHC/CPHC current advisories. Coverage includes Atlantic and eastern/central North Pacific. Track/cone availability is separately reported. Hazards extend beyond the cone; a location outside it is not necessarily safe.
-- Heat: NASA FIRMS satellite detections in the bounding box west -88, south 24, east -79, north 32; trailing 24 hours, up to four MODIS/VIIRS feeds. This rectangle includes neighboring regions. Detections may be industrial heat or other sources; these are not fire perimeters or confirmed incidents. Separate sensors may report the same heat source.
-- Streets: OpenStreetMap standard tiles, with attribution. Satellite imagery: Esri World Imagery, with attribution. Reassess hosting/usage terms before scaling beyond the small preview; do not bulk-download tiles.
+## Data and coverage
 
-Requests are cached, coalesced and timeout-limited. Stale/partial failures are labeled. Address lookup is limited globally to 20 requests/minute and 500 requests/UTC day per running server process; a restart resets these in-memory limits. Set provider-side limits for a hard account-level cap.
+Official directory: https://locations.suncoastcreditunion.com, collected September 27, 2026. Branch coordinates come from official records. Of 88 ATM records, 75 have address-estimated coordinates and 13 require address review before mapping. Directory records may include ATMs colocated with branches. Published schedules do not confirm storm opening status.
 
-## Persistence and privacy
+Traffic dots visualize measured TomTom road flow; they are not tracked individual vehicles. Flight coverage depends on public receivers and can use a labeled fallback feed or stale cache. Public ALPR markers describe camera locations, not access to camera feeds; public CCTV coverage varies and is not comprehensive in Florida. Weather comes from NWS, NOAA and NHC; NASA heat detections are neither confirmed fire incidents nor fire perimeters. Provider attribution remains visible in the globe. The optional noncommercial submarine-cable dataset is excluded.
 
-Imports and operational notes are stored in **this browser's local storage**, not on the server. They are not shared between devices or coworkers. Clearing site data removes them. JSON exports include notes, but the current importer imports locations only; it does not restore operational notes. Coordinates are handled locally. Address lookup sends the address to TomTom through the server. Map requests reveal the viewed area to the map provider.
+Imports and notes live in each browser's local storage, not a shared operations database. Exported notes are included in JSON, but import currently restores locations only. Address lookup sends addresses to TomTom; map/feed requests disclose the viewed area to their providers. Server geocoding limits are 20/minute and 500/day per process. Traffic tile budgets and caches use a persistent Docker volume. Provider quotas and coverage still apply.
 
-Every branch starts at **Unknown** operational status. Weather data never sets a branch to Open or Closed. Manual notes carry a timestamp and are labeled user reported. Power, staffing, connectivity, generator status, outages, evacuation-zone classifications, and road closures are not supplied by this prototype. A shared production operations system would need authenticated roles, an audit trail, approved internal data, durable storage and a continuity process.
-
-## Deploy to Aech
-
-See [DEPLOY.sunwatch.md](DEPLOY.sunwatch.md) for the complete Aech handoff. At the owner's explicit request, `sunwatch/.env.deploy` publishes the two TomTom/NASA data-service keys for deployment convenience. They are publicly usable against the owner's quotas. Other credentials and runtime `.env` files remain ignored. The deployment config is excluded from container images. The production image copies only SunWatch and the required MIT-licensed upstream provider modules; it does not bundle God's Eye's optional third-party datasets.
+This independent prototype is intended for the Innovation Club demonstration, not an official Suncoast emergency-management system. Power, staffing, connectivity and confirmed branch closures require operational inputs not supplied here.
 
 ## Credits
 
-Forked from [Bilawal Sidhu's God's Eye View](https://github.com/bilawalsidhu/gods-eye-view), under the existing MIT [LICENSE](LICENSE). SunWatch reuses the upstream cyclone/weather providers and FIRMS CSV parser. Leaflet is BSD-2-Clause; Express and Papa Parse are MIT. Service data and map tiles retain their respective providers' terms.
-
-The SunWatch logo was created with the built-in image generation tool. See `sunwatch/LOGO.md` for its prompt and asset path.
+Forked from [Bilawal Sidhu's God's Eye View](https://github.com/bilawalsidhu/gods-eye-view), under its existing MIT [LICENSE](LICENSE). SunWatch runs the original globe frontend with a location portal and provider backend. Service data retains its providers' terms. See [logo notes](sunwatch/LOGO.md).

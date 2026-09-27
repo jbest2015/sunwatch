@@ -63,7 +63,7 @@ export const MODEL_SCALE = 1;
 // airplane.glb is transform-applied and baked to real-world meters
 // Per-mode caps. Each model is its own draw call (no instancing yet), so these bound the frame cost.
 
-export const MODEL_MAX = 150;
+export const MODEL_MAX = 35;
 // 'proximity' cap (the planes immediately around you)
 
 export const MODEL_MAX_ALL = 350;
@@ -76,11 +76,11 @@ export const MODEL_MAX_ALL = 350;
 // giant floating blob (the old 422 km airport-cluster bug), so far planes stay 2D dots; the cap +
 // on-screen priority then spend the model slots on planes you can actually see.
 
-export const MODEL_PROX_ADD_M = 150000;
-// proximity: model NEW planes within 150 km
+export const MODEL_PROX_ADD_M = 40000;
+// SunWatch: prioritize aircraft around the selected branch; farther tracks stay 2D.
 
-export const MODEL_PROX_KEEP_M = 185000;
-// proximity: KEEP modeled planes out to 185 km
+export const MODEL_PROX_KEEP_M = 50000;
+// Keep nearby models out to 50 km to avoid boundary churn.
 
 export const COCKPIT_MODEL_MAX = 60;
 // max concurrent GLBs in cockpit (never raises the map cap)

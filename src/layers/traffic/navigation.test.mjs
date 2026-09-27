@@ -11,7 +11,7 @@ function deferred() {
   return { promise, resolve };
 }
 
-function setup(t, requestRoads) {
+function setup(t, requestRoads, sourceOverrides = {}) {
   t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
   const camera = {
     positionCartographic: Cesium.Cartographic.fromDegrees(
@@ -50,7 +50,7 @@ function setup(t, requestRoads) {
   };
   const layer = createTrafficLayer({
     services: {
-      credits: {},
+      credits: { registerDynamicCredit() {} },
       render: { holdContinuousRender() {}, releaseContinuousRender() {} },
     },
     source: {
@@ -59,6 +59,7 @@ function setup(t, requestRoads) {
       fetchFlowForBounds: async () => [],
       getFlowSessionStats: () => ({ tilesFetched: 0 }),
       resetFlowTileCache() {},
+      ...sourceOverrides,
     },
   });
   layer.init(viewer);
@@ -95,6 +96,39 @@ function roads(bounds) {
     }),
   };
 }
+
+test('live traffic renders TomTom geometry without requesting Overpass roads', async (t) => {
+  let overpassCalls = 0;
+  const { layer, viewer, tick } = setup(t, async () => {
+    overpassCalls++;
+    throw new Error('Overpass unavailable');
+  }, {
+    getStatus: async () => ({ hasKey: true }),
+    fetchFlowForBounds: async (bounds) => [{
+      coords: [[bounds.west, bounds.south], [bounds.east, bounds.north]],
+      roadType: 'Major road', trafficLevel: 0.3, closure: false,
+    }],
+  });
+  layer.enable(viewer);
+  await tick(400);
+  assert.equal(overpassCalls, 0);
+  assert.ok(layer.getStats().count > 0);
+  assert.equal(layer.getStats().mode, 'live');
+  assert.equal(layer.getStats().loading, false);
+  assert.equal(layer.getStats().error, null);
+});
+
+test('live traffic reports a TomTom budget failure and finishes loading', async (t) => {
+  const { layer, viewer, tick } = setup(t, async () => { throw new Error('must not request roads'); }, {
+    getStatus: async () => ({ hasKey: true }),
+    fetchFlowForBounds: async () => { throw new Error('HTTP 429'); },
+  });
+  layer.enable(viewer);
+  await tick(400);
+  assert.equal(layer.getStats().count, 0);
+  assert.equal(layer.getStats().loading, false);
+  assert.equal(layer.getStats().error, 'TomTom daily budget reached');
+});
 
 test('traffic recovers a failed destination request after another city has loaded', async (t) => {
   let londonCalls = 0;

@@ -5,6 +5,7 @@ import {
   FAST_FETCH_ALTITUDE,
 } from './policy.js';
 import { RoadRequestError, roadRequestError } from './source.js';
+import { roadsFromFlowSegments } from './flowRoads.js';
 
 export function createIngestion({
   state: layerState,
@@ -174,20 +175,8 @@ export function createIngestion({
     }
     layerState._roadError = null;
 
-    // Live mode: warm the flow-tile cache CONCURRENTLY with the Overpass road
-    // fetch — sequential fetches doubled first-paint latency (field-test
-    // round 1). Failures are irrelevant; applyFlowToRoads settles the truth.
-    parts.flow.ensureFlowStatus().then(() => {
-      if (
-        layerState._liveMode &&
-        layerState._enabled &&
-        generation === layerState._loadGeneration
-      ) {
-        fetchFlowForBounds(clamped, { signal: requestSignal }).catch(() => {
-          /* warm-up only */
-        });
-      }
-    });
+    // Resolve the provider before choosing the road geometry source.
+    parts.flow.ensureFlowStatus();
 
     layerState._fetching = true;
     // Only COMMIT these on success. Committing up-front means a failed Overpass
@@ -201,6 +190,23 @@ export function createIngestion({
     let renderedSomething = false;
 
     try {
+      await layerState._flowStatusPromise;
+      requestSignal.throwIfAborted();
+      if (generation !== layerState._loadGeneration) return;
+      if (layerState._liveMode) {
+        // TomTom already supplies shapes and congestion together. Do not
+        // gate a working live feed on the independent public Overpass service.
+        const segments = await fetchFlowForBounds(clamped, { signal: requestSignal });
+        requestSignal.throwIfAborted();
+        if (generation !== layerState._loadGeneration) return;
+        const roads = layerState._parseRoads({ roads: roadsFromFlowSegments(segments, clamped) }, trace);
+        for (const road of roads) road.flow = road.directFlow;
+        layerState._flowCoveragePct = roads.length ? 100 : 0;
+        layerState._flowError = null;
+        parts.rendering.renderRoadsForAltitude(roads, altitude, 'Loaded TomTom', trace);
+        renderedSomething = true;
+        return;
+      }
       let cache = layerState._tileCache.get(cacheKey);
       if (!cache) {
         // LRU eviction: drop the oldest entry when cache exceeds the cap
@@ -314,9 +320,12 @@ export function createIngestion({
         // because `e.message` from the platform is not a sentence anyone
         // should have to read off a panel.
         layerState._roadError =
-          e instanceof RoadRequestError
+          layerState._liveMode
+            ? parts.flow.deriveTrafficFlowError(e)
+            : e instanceof RoadRequestError
             ? e.message
             : 'Road data temporarily unavailable';
+        if (layerState._liveMode) layerState._flowCoveragePct = 0;
       }
       console.warn('[Data:Traffic] Fetch error:', e);
     } finally {

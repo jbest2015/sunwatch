@@ -3,6 +3,8 @@
 **/.env.*
 .git
 dist
+**/dist
+src/data/local_data/telegeography_submarine_cables
 **/*.log
 **/.gev-cache
 **/screenshots

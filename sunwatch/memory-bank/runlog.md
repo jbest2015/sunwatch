@@ -22,3 +22,10 @@ See `../VALIDATION.md` and `../../DEPLOY.sunwatch.md` for checks and continuatio
 - Expanded the deployment memo with connection, network discovery, configuration, launch, HTTPS/browser verification, rollback and remaining product boundaries.
 - Owner explicitly requested publishing the TomTom and NASA data keys in GitHub. Added only those two keys to `sunwatch/.env.deploy`, with a narrow Git ignore exception. Runtime environment files and unrelated credentials remain excluded; Docker still excludes all `.env.*` files.
 - Updated the startup instructions to copy the published deployment configuration. This does not deploy to Aech; the owner will continue from a machine with SSH access.
+# September 27, 2026 — God's Eye portal correction
+
+Owner rejected the separate Leaflet dashboard and requested the original God's Eye experience centered on Suncoast. Replaced the served frontend with the original Cesium globe, added a tactical SunWatch logo and branch/ATM portal, preserved live-layer/navigation controls, and disabled voice/AI setup. Added 88 official ATM directory records (75 estimated coordinates, 13 needing review) to the existing 81 branches. Nearby filtering, branch/ATM camera jumps, local notes and imports are integrated into the globe.
+
+Build and focused tests pass; Docker container is healthy and all 12 endpoint smoke checks pass. Satellite globe imagery, logo, traffic, branch/ATM navigation, nearby filtering and point weather were checked in the browser. Photorealistic mode remains slow on this machine; satellite is the default. See VALIDATION.md for limits.
+
+Updated deployment memo and public data-key config (now including the Cesium browser token, per owner authorization). Deploy latest sunwatch branch, not the earlier b90a0de Leaflet build. Aech still requires deployment from the user's other machine; no remote changes made here.

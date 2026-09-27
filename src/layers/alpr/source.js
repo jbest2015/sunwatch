@@ -8,6 +8,7 @@ import { buildOverpassQuery, normalizeAlprNode } from './records.js';
 /** Construct the bounded OSM request adapter without starting a request. */
 export function createOverpassAlprSource({
   fetchImpl = (...args) => globalThis.fetch(...args),
+  usePublishedDataset = false,
 } = {}) {
   async function fetchAlprNodes(box, signal) {
     signal?.throwIfAborted();
@@ -27,7 +28,9 @@ export function createOverpassAlprSource({
       throw new TypeError('ALPR requires a bounded city viewport');
     }
     const query = buildOverpassQuery(box.south, box.west, box.north, box.east);
-    const response = await fetchImpl(OVERPASS_URL, {
+    // Use the US/Canada published snapshot within its region; retain global OSM queries elsewhere.
+    const published = usePublishedDataset && box.south >= 18 && box.north <= 85 && box.west >= -170 && box.east <= -50;
+    const response = await fetchImpl(published ? `/api/alpr-locations?${new URLSearchParams(box)}` : OVERPASS_URL, published ? { signal } : {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: `data=${encodeURIComponent(query)}`,
@@ -40,7 +43,7 @@ export function createOverpassAlprSource({
         /* already closed */
       }
       const message =
-        response.status === 429
+        published ? 'Published camera locations unavailable' : response.status === 429
           ? 'Overpass rate-limited'
           : response.status === 504
             ? 'Overpass timed out'
@@ -71,7 +74,7 @@ export function createOverpassAlprSource({
   }
   return {
     fetch: fetchAlprNodes,
-    label: 'OpenStreetMap · community mapped',
+    label: usePublishedDataset ? 'OpenStreetMap / DeFlock · community mapped' : 'OpenStreetMap · community mapped',
     attribution: {
       name: 'OpenStreetMap',
       description: 'OpenStreetMap contributors (ODbL 1.0; community mapped)',

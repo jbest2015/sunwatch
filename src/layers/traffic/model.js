@@ -50,12 +50,14 @@ export function createModel({ state: layerState, services, parts, source }) {
       // Sample terrain height once at the road start to avoid per-vertex cost
       let baseHeight = 0;
       const firstCoord = coords[0];
-      if (layerState._viewer?.scene?.sampleHeightSupported && firstCoord) {
+      if (layerState._viewer?.scene?.globe && firstCoord) {
         const carto = Cesium.Cartographic.fromDegrees(
           firstCoord[0],
           firstCoord[1],
         );
-        const sampled = layerState._viewer.scene.sampleHeight(carto);
+        // Use cached terrain heights; synchronous 3D pick passes per road
+        // can stall the entire globe while a dense urban tile is ingested.
+        const sampled = layerState._viewer.scene.globe.getHeight(carto);
         if (Number.isFinite(sampled)) baseHeight = sampled;
       }
 
@@ -73,7 +75,7 @@ export function createModel({ state: layerState, services, parts, source }) {
         );
       }
 
-      roads.push({ coords, type, oneway, waypoints, segmentDist });
+      roads.push({ coords, type, oneway, waypoints, segmentDist, directFlow: road.directFlow });
     }
 
     return roads;

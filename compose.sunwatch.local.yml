@@ -12,4 +12,8 @@ services:
     read_only: true
     tmpfs:
       - /tmp:size=16m
-    mem_limit: 512m
+    mem_limit: 1g
+    volumes:
+      - sunwatch-local-cache:/app/sunwatch/.gev-cache
+volumes:
+  sunwatch-local-cache:

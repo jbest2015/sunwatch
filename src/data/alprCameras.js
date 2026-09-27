@@ -4,7 +4,7 @@ import { createSourceSlot } from '../sources/sourceSlot.js';
 import { createOverpassAlprSource } from '../layers/alpr/index.js';
 export * from '../layers/alpr/index.js';
 const slot = createSourceSlot(
-  createOverpassAlprSource(),
+  createOverpassAlprSource({ usePublishedDataset: true }),
   ['fetch'],
   'ALPR source',
 );

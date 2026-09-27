@@ -3,6 +3,18 @@ import assert from 'node:assert/strict';
 import { createOverpassAlprSource } from './source.js';
 import { validateAlprSnapshot, alprCreditMarkup } from './model.js';
 const box = { south: 30, west: -98, north: 30.1, east: -97.9 };
+test('published source requests bounded camera snapshots without Overpass', async () => {
+  let requested;
+  const source = createOverpassAlprSource({ usePublishedDataset: true, fetchImpl: async (url, options) => {
+    requested = url;
+    assert.equal(options.method, undefined);
+    return new Response(JSON.stringify({ elements: [{ type: 'node', id: 42, lat: 30.05, lon: -97.95, tags: { 'surveillance:type': 'ALPR' } }] }));
+  }});
+  const result = await source.fetch(box);
+  assert.ok(requested.startsWith('/api/alpr-locations?'));
+  assert.equal(result.records.length, 1);
+  assert.equal(result.records[0].osmId, 42);
+});
 test('the source rejects invalid and unbounded queries before fetching', async () => {
   let calls = 0;
   const source = createOverpassAlprSource({
