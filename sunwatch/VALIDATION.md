@@ -15,4 +15,6 @@ Local Node 24 and Docker Desktop Linux-engine checks completed.
 
 Feed values during the checks included 12 Florida NWS alerts, 5 active NHC/CPHC storms, and 166 trailing-day heat detections in the configured region. These are observations from the test time, not fixed expected values.
 
-Not complete: Aech SSH access, production container/network inspection, public DNS resolution, HTTPS issuance and public-host smoke checks. Shared cross-device status persistence is outside this preview implementation.
+Final container checks: healthy, unprivileged UID 1000, no `.env` file baked into the image, upstream license present. DNS now resolves `sunwatch.johnbest.ai` to `64.111.21.67`, matching Aech's hostname.
+
+Not complete: Aech SSH access, production container/network inspection, HTTPS issuance and public-host smoke checks. Shared cross-device status persistence is outside this preview implementation.

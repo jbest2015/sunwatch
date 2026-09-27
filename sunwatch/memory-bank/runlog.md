@@ -12,6 +12,7 @@
 - Local Docker compose build/start passed. No unrelated containers restarted.
 - 12 endpoint smoke checks passed against the container on 127.0.0.1:4181.
 - Desktop/mobile browser and import/status/persistence verification passed. Temporary test location removed.
-- Deployment blocked: documented `aech1_sammy` SSH key absent here; existing key rejected by Aech. Public `sunwatch.johnbest.ai` DNS did not resolve from 1.1.1.1 during checks.
+- Deployment blocked: documented `aech1_sammy` SSH key absent here; existing key rejected by Aech. Public DNS initially did not resolve but subsequently propagated: `sunwatch.johnbest.ai` and Aech's hostname both resolve to `64.111.21.67`.
+- Final container health: healthy; UID 1000; key file absent from image; license present.
 
 See `../VALIDATION.md` and `../../DEPLOY.sunwatch.md` for checks and continuation steps.

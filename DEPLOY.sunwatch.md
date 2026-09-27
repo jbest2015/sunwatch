@@ -6,7 +6,7 @@ Target: `https://sunwatch.johnbest.ai` on Aech. Status: **local preview prepared
 
 The owner's Obsidian server skill identifies `sammy@port.jsbjr.digital` and private key `~/.ssh/aech1_sammy`. That key is absent on the current Windows machine, and its existing key was rejected. Use an authorized machine with the documented key, or make the key available through the owner's normal secure process. Do not put private keys in this repository.
 
-The hostname `sunwatch.johnbest.ai` did not resolve through 1.1.1.1 during the September 27 checks. Confirm the A/AAAA records point to Aech before certificate issuance; do not add an AAAA record unless Aech actually serves IPv6. Confirm the server IP from infrastructure records rather than copying an old known-hosts entry.
+The hostname `sunwatch.johnbest.ai` now resolves through 1.1.1.1 to `64.111.21.67`, matching `port.jsbjr.digital` (September 27 verification). DNS initially had not propagated. Verify again before certificate issuance; do not add an AAAA record unless Aech actually serves IPv6.
 
 ## Deploy sequence
 
