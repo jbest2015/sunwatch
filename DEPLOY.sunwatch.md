@@ -7,15 +7,15 @@ Prepared September 27, 2026 for deployment from a machine with Aech SSH access.
 | Public URL | https://sunwatch.johnbest.ai |
 | Repository | https://github.com/jbest2015/sunwatch |
 | Branch | `sunwatch` (default branch) |
-| Server | `sammy@port.jsbjr.digital` |
-| Expected directory | `/home/sammy/sunwatch` |
-| Status | Tested locally; **not deployed to Aech yet** |
+| Server | `port.jsbjr.digital` (Aech), deployed as `claude` (docker group) |
+| Deployed directory | `/home/claude/sunwatch` (`/home/sammy` is not writable by `claude`) |
+| Status | **Deployed to Aech September 27, 2026** — see [Deployment record](#deployment-record) |
 
 ## Ready to deploy
 
 The app includes 81 official Suncoast branch records, the SunWatch logo, address lookup/import, branch selection, browser-local status notes, and NWS/NOAA/NHC/NASA weather overlays. Five unit tests, twelve container endpoint checks, desktop/mobile browser checks and import/persistence checks passed. See [validation](sunwatch/VALIDATION.md).
 
-DNS resolved both `sunwatch.johnbest.ai` and `port.jsbjr.digital` to `64.111.21.67` at the final September 27 check. Recheck before certificate issuance. This Windows machine lacked the documented SSH key; no Aech deployment or server changes were performed.
+DNS resolves both `sunwatch.johnbest.ai` and `port.jsbjr.digital` to `64.111.21.67`. The documented `aech1_sammy` key was absent on both the Windows and Mac deployment machines; the Mac's existing `~/.ssh/config` entry for Aech (user `claude`, docker group) was used instead, at the owner's direction.
 
 ## 1. Connect and inspect Aech
 
@@ -126,6 +126,32 @@ docker compose -p sunwatch -f compose.sunwatch.yml stop sunwatch
 Do not stop the proxy, certificate companion or neighboring applications. Do not run a global Docker prune. Before future upgrades, record the deployed commit and image ID and retain/tag the working image alongside its matching Compose configuration. Roll back using that retained image/configuration and recreate only SunWatch.
 
 After a successful deployment, update this memo and [runlog](sunwatch/memory-bank/runlog.md) with the deployment time, commit, image ID, actual proxy network, URL and verification results, then commit/push the handoff update.
+
+## Deployment record
+
+Deployed **2026-09-27 20:21 UTC** from John's Mac.
+
+| Item | Value |
+| --- | --- |
+| Commit | `b90a0def1d5e564b7b6ac88786b0e0b5c81a9c2b` (`sunwatch` branch) |
+| Directory | `/home/claude/sunwatch` on Aech |
+| Compose | standalone `docker-compose` v2.20.3 (Aech has no `docker compose` plugin): `docker-compose -p sunwatch -f compose.sunwatch.yml ...` |
+| Image | `sunwatch-sunwatch:latest` = `sha256:8029780ad2ad9e411f480df8696fd77dbdca521ba969c47d442c4dd809cc1581` (180 MB); retained as rollback tag `sunwatch-sunwatch:b90a0de` |
+| Container | `sunwatch-sunwatch-1`, healthy, 0 restarts |
+| Proxy network | `nextcloud_network` (shared by `nextcloud3-proxy` and `nextcloud3-letsencrypt`; same convention as `five-demo-prod`). Root `.env`: `AECH_PROXY_NETWORK=nextcloud_network` |
+| Certificate | Let's Encrypt (YR2) for `sunwatch.johnbest.ai`, issued automatically by `nextcloud3-letsencrypt` at 20:22 UTC, valid to 2026-12-26. No per-app `LETSENCRYPT_EMAIL` needed (companion has no email configured; neighbors issue without one) |
+| URL | https://sunwatch.johnbest.ai |
+
+Pre-deploy health check: `WARNING` (32 warnings), all pre-existing: `/` at 83%, 29 long-exited containers, 6 zombie processes. RAM 59%, load 1.8/16 CPUs. The health script lives at `/home/sammy/scripts/healthcheck.sh` (readable by `claude`). No shared infrastructure was changed or restarted; proxy config test passed afterward and neighbor sites responded normally.
+
+Verification (all passed):
+
+- Container health `healthy`; in-container `/api/health` returned `{"ok":true,"app":"SunWatch","version":"0.1.0"}`.
+- Public `https://sunwatch.johnbest.ai/api/health` passed with normal TLS verification; HTTP redirects 301 to HTTPS. `/.env`, `/sunwatch/.env`, `/sunwatch/.env.deploy` all `404`.
+- Public API: `/api/branches` 81 records, 81 unique IDs, none missing coordinates; `/api/alerts` (statewide and point), `/api/forecast`, `/api/weather/manifest?product=radar`, `/api/cyclones`, `/api/fires`, `/api/geocode` all `200`. TomTom returned "3801 Tamiami Trail, Port Charlotte, FL 33952".
+- Headless Chrome against the public site (desktop 1440×900 and mobile 390×844): logo loads; 81 locations / 20 counties / 12 NWS alerts; Charlotte Harbor search → selection zooms to 23141 Harbor View Road with NWS forecast and point alerts. Address lookup added a temporary location; it and a test status note survived reload; both removed afterward. Radar (MRMS observed 4:16 PM EDT), hurricanes (5 active NHC systems), fires (169 FIRMS detections) and the Esri satellite basemap all loaded with timestamps. No console errors; no horizontal overflow on mobile. The only failed requests were OpenStreetMap tiles aborted by Leaflet during zoom animation (expected).
+
+Rollback / upgrade: `cd /home/claude/sunwatch`, then for a new commit `git pull --ff-only && docker tag sunwatch-sunwatch:latest sunwatch-sunwatch:<old-commit> && docker-compose -p sunwatch -f compose.sunwatch.yml up --build -d`. To roll back, `git checkout <old-commit>`, `docker tag sunwatch-sunwatch:<old-commit> sunwatch-sunwatch:latest`, then `docker-compose -p sunwatch -f compose.sunwatch.yml up -d --no-build`.
 
 ## Product boundaries for the October demo
 
