@@ -36,7 +36,7 @@ docker compose -p sunwatch-local -f compose.sunwatch.local.yml up --build -d
 # http://127.0.0.1:4181
 ```
 
-See [deployment memo](DEPLOY.sunwatch.md) and [validation](sunwatch/VALIDATION.md). Aech deployment remains pending access from another machine.
+See [deployment memo](DEPLOY.sunwatch.md) and [validation](sunwatch/VALIDATION.md). The earlier Leaflet build is deployed on Aech; this globe rebuild still needs a pull and rebuild from the deployment machine.
 
 ## Data and coverage
 
@@ -51,3 +51,4 @@ This independent prototype is intended for the Innovation Club demonstration, no
 ## Credits
 
 Forked from [Bilawal Sidhu's God's Eye View](https://github.com/bilawalsidhu/gods-eye-view), under its existing MIT [LICENSE](LICENSE). SunWatch runs the original globe frontend with a location portal and provider backend. Service data retains its providers' terms. See [logo notes](sunwatch/LOGO.md).
+

@@ -29,3 +29,19 @@ Owner rejected the separate Leaflet dashboard and requested the original God's E
 Build and focused tests pass; Docker container is healthy and all 12 endpoint smoke checks pass. Satellite globe imagery, logo, traffic, branch/ATM navigation, nearby filtering and point weather were checked in the browser. Photorealistic mode remains slow on this machine; satellite is the default. See VALIDATION.md for limits.
 
 Updated deployment memo and public data-key config (now including the Cesium browser token, per owner authorization). Deploy latest sunwatch branch, not the earlier b90a0de Leaflet build. Aech still requires deployment from the user's other machine; no remote changes made here.
+
+## 2026-09-27 — deployed to Aech
+
+- `aech1_sammy` key absent on the Mac too; used the Mac's existing SSH config entry for Aech (`claude@port.jsbjr.digital`, docker group) at the owner's direction. Cloned to `/home/claude/sunwatch` because `/home/sammy` is not writable by `claude`.
+- Health check before deploy: WARNING, all pre-existing (disk 83%, old exited containers, 6 zombies). Nothing restarted.
+- Proxy network verified as `nextcloud_network` (shared by `nextcloud3-proxy` and `nextcloud3-letsencrypt`, used by `five-demo-prod`). Copied `sunwatch/.env.deploy` → `sunwatch/.env`; root `.env` sets `AECH_PROXY_NETWORK=nextcloud_network`; both mode 600.
+- Aech has standalone `docker-compose` v2.20.3 only; used it in place of `docker compose`. Build and start succeeded first try; only a harmless "kernel does not support swap limit" notice.
+- Deployed commit `b90a0de`, image `sha256:8029780ad2ad…1581`, tagged `sunwatch-sunwatch:b90a0de` for rollback. Container `sunwatch-sunwatch-1` healthy.
+- Let's Encrypt certificate issued automatically within a minute; public HTTPS verified with normal TLS checks.
+- Verified all 8 public API endpoints, 81 branches, TomTom lookup, NWS/NOAA/NHC/NASA overlays, satellite/street basemaps, import + note persistence (test data removed), and mobile layout via headless Chrome. No console errors.
+- Neighbor sites and proxy unaffected (`nginx -t` OK; `fivedemo` 401 is its own basic auth).
+- Remaining: status notes and imports are per-browser only; no shared storage, auth or audit trail.
+
+
+The deployment record above describes the old b90a0de Leaflet build. The globe rebuild still needs deployment; both histories were retained when merging the Mac update.
+

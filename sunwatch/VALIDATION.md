@@ -10,7 +10,7 @@
 - Browser: aircraft feed reported 200 records; traffic rendered on roads; radar toggle enabled. This is not a comprehensive validation of every upstream layer or every Florida camera feed.
 - Screenshot inspection confirmed satellite imagery, road traffic and SunWatch markers inside the tactical globe. Container-served startup showed the logo and 81 branches / 88 ATMs, with satellite mode selected.
 - Photorealistic 3D produced sluggish/unresponsive previews on this machine. The default is now satellite imagery on the Cesium globe; photorealistic mode remains optional and needs performance testing on the demo machine. Removed synchronous per-road 3D height picks, reduced detailed aircraft range/cap, and bounded tile cache/frame rate.
-- No Aech deployment or public HTTPS verification has occurred.
+- No Aech deployment of this globe rebuild has occurred. The merged Mac deployment record verifies only the earlier b90a0de Leaflet build.
 
 ## Earlier Leaflet prototype checks (historical)
 
@@ -32,3 +32,4 @@ Feed values during the checks included 12 Florida NWS alerts, 5 active NHC/CPHC 
 Final container checks: healthy, unprivileged UID 1000, no `.env` file baked into the image, upstream license present. DNS now resolves `sunwatch.johnbest.ai` to `64.111.21.67`, matching Aech's hostname.
 
 Not complete: Aech SSH access, production container/network inspection, HTTPS issuance and public-host smoke checks. Shared cross-device status persistence is outside this preview implementation.
+
