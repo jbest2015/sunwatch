@@ -318,22 +318,35 @@ export function mountHearth(app, { hearthDir, tomtomKey, log = console }) {
       traffic: inc.value?.incidents.slice(0, 3).map((i) => `${i.kind} ${i.road} ${i.from}→${i.to} +${i.delayMin}m`),
       drives: com.value?.routes.map((r) => `${r.name} ${r.minutes}m${r.delayMin ? ` (+${r.delayMin})` : ''}`),
     };
-    const r = await fetch((c.ollamaUrl || 'http://127.0.0.1:11434') + '/api/generate', {
-      method: 'POST',
-      signal: AbortSignal.timeout(90000),
-      body: JSON.stringify({
-        model,
-        stream: false,
-        options: { temperature: 0.4, num_predict: 90 },
-        prompt:
-          'You write the one-line status ticker for a living-room TV in Tampa. Style: calm mission-control briefing, plain English, under 28 words, no emoji, no dollar amounts, no quotes. Mention only what matters right now (weather change, a bad traffic spot, the next event). Facts:\n' +
-          JSON.stringify(facts) +
-          '\nTicker:',
-      }),
-    });
-    if (!r.ok) throw Error('ollama ' + r.status);
-    const j = await r.json();
-    return { at: Date.now(), text: String(j.response || '').replace(/\s+/g, ' ').replace(MONEY, '').trim().replace(/^["']|["']$/g, '') };
+    const prompt =
+      'You write the one-line status ticker for a living-room TV in Tampa. Style: calm mission-control briefing, plain English, under 28 words, no emoji, no dollar amounts, no quotes, no preamble. Mention only what matters right now (weather change, a bad traffic spot, the next event). Use only these facts:\n' +
+      JSON.stringify(facts) +
+      '\nTicker:';
+    // ollamaModel may be a list: first is preferred (e.g. a Kimi cloud model),
+    // later entries are local fallbacks for when the internet or quota is down.
+    let lastErr;
+    for (const m of [].concat(model)) {
+      try {
+        const r = await fetch((c.ollamaUrl || 'http://127.0.0.1:11434') + '/api/generate', {
+          method: 'POST',
+          signal: AbortSignal.timeout(90000),
+          body: JSON.stringify({ model: m, stream: false, think: false, options: { temperature: 0.4, num_predict: 120 }, prompt }),
+        });
+        if (!r.ok) throw Error('ollama ' + m + ' ' + r.status);
+        const j = await r.json();
+        const text = String(j.response || '')
+          .replace(/<think>[\s\S]*?<\/think>/g, '')
+          .replace(/\s+/g, ' ')
+          .replace(MONEY, '')
+          .trim()
+          .replace(/^(ticker:\s*)/i, '')
+          .replace(/^["']|["']$/g, '');
+        if (text) return { at: Date.now(), model: m, text };
+      } catch (e) {
+        lastErr = e;
+      }
+    }
+    throw lastErr || Error('no model');
   });
 
   const safe = (fn) => async (req, res) => {
