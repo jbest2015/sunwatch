@@ -63,6 +63,8 @@ function memo(ttlMs, fn) {
   };
 }
 
+const tidy = (t) =>
+  t.replace(MONEY, '').replace(/,\s*\)/g, ')').replace(/\(\s*\)/g, '').replace(/\s{2,}/g, ' ').trim();
 const MONEY = /\$\s?\d[\d,]*(\.\d+)?|\b\d[\d,]*(\.\d\d)\b/g;
 
 export function mountHearth(app, { hearthDir, tomtomKey, log = console }) {
@@ -189,7 +191,7 @@ export function mountHearth(app, { hearthDir, tomtomKey, log = console }) {
       stale: raw.stale,
       events: raw.events
         .filter((e) => !hide.some((h) => (e.title + ' ' + e.location).toLowerCase().includes(h)))
-        .map((e) => ({ ...e, title: e.title.replace(MONEY, '').replace(/\s{2,}/g, ' ').trim(), location: e.location.split(',')[0] })),
+        .map((e) => ({ ...e, title: tidy(e.title), location: e.location.split(',')[0] })),
     };
   }
 
