@@ -389,8 +389,18 @@ async function visit(i) {
   orbitSpeed = saved;
 }
 
+// ---------------------------------------------------------------- fit to any screen
+// The HUD is authored at 1920x1080 for the TV; laptops and phones get it scaled.
+function fit() {
+  const z = Math.min(innerWidth / 1920, innerHeight / 1080);
+  document.documentElement.style.zoom = Math.abs(z - 1) < 0.01 ? '' : z;
+}
+addEventListener('resize', fit);
+
 // ---------------------------------------------------------------- boot
 async function main() {
+  fit();
+  if (!/^(127\.|localhost)/.test(location.hostname)) document.body.style.cursor = 'default';
   tickClock();
   setInterval(tickClock, 1000);
   await loadState();

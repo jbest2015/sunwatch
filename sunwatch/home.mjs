@@ -396,6 +396,22 @@ export function mountHearth(app, { hearthDir, tomtomKey, log = console }) {
     }),
   );
 
+  // Access control: the TV (loopback) needs nothing. Any other device must know
+  // HEARTH_TOKEN: open /tv/?k=TOKEN once and a year-long cookie is set. This keeps
+  // the calendar and guest Wi-Fi password off the open LAN/Tailscale.
+  app.use(['/tv', '/api/hearth'], (req, res, next) => {
+    const ip = req.socket.remoteAddress || '';
+    if (/^(::1|127\.|::ffff:127\.)/.test(ip)) return next();
+    const token = secrets().HEARTH_TOKEN;
+    if (!token) return res.status(403).send('Remote access is not configured.');
+    const cookie = /(?:^|;\s*)hearth=([^;]+)/.exec(req.headers.cookie || '')?.[1];
+    if (cookie === token) return next();
+    if (req.query.k === token) {
+      res.setHeader('Set-Cookie', `hearth=${token}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Strict`);
+      return next();
+    }
+    res.status(403).send('Not authorized.');
+  });
   app.use('/api/hearth', router);
   log.log?.('[hearth] TV mode mounted from ' + hearthDir);
 }
