@@ -274,6 +274,16 @@ app.use(
 app.get('/vendor/papaparse.js', (_q, r) =>
   r.sendFile(path.join(dir, 'node_modules/papaparse/papaparse.min.js')),
 );
+// Living-room TV mode (sunwatch "home" branch). Off unless HEARTH_DIR is set,
+// so the public Suncoast deployment is unaffected.
+if (process.env.HEARTH_DIR) {
+  const { mountHearth } = await import('./home.mjs');
+  mountHearth(app, {
+    hearthDir: process.env.HEARTH_DIR,
+    tomtomKey: process.env.TOMTOM_API_KEY,
+  });
+  app.use('/tv', express.static(path.join(dir, 'tv'), { maxAge: 0 }));
+}
 app.use(express.static(path.join(dir, 'dist'), { maxAge: 300000 }));
 app.use('/api', (_q, r) => r.status(404).json({ error: 'Unknown API route' }));
 app.use((_q, r) => r.status(404).send('Not found'));

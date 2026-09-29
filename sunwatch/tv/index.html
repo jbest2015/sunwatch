@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920,height=1080">
+<title>Hearth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tv.css">
+</head>
+<body>
+<iframe id="globe" title="Globe" allow="autoplay"></iframe>
+<div id="vignette"></div>
+<div id="scan"></div>
+
+<main id="hud">
+  <!-- top left: identity + clock -->
+  <section id="clock" class="corner">
+    <div class="callsign"><span class="dot live"></span><span id="title">HEARTH</span> <span class="dim">// NORTH TAMPA</span></div>
+    <div id="time">--:--</div>
+    <div id="date">—</div>
+    <div id="sun" class="dim"></div>
+  </section>
+
+  <!-- top right: weather -->
+  <section id="wx" class="glass">
+    <header><span>WEATHER</span><span id="wx-station" class="dim"></span></header>
+    <div class="wx-now">
+      <div id="wx-temp">--°</div>
+      <div class="wx-desc"><div id="wx-text">—</div><div id="wx-hilo" class="dim"></div></div>
+    </div>
+    <svg id="wx-spark" viewBox="0 0 400 90" preserveAspectRatio="none"></svg>
+    <div id="wx-hours" class="hours"></div>
+    <div id="wx-alerts"></div>
+  </section>
+
+  <!-- right: schedule OR guest welcome -->
+  <section id="sched" class="glass">
+    <header><span>SCHEDULE</span><span id="cal-stale" class="dim"></span></header>
+    <div id="cal"></div>
+  </section>
+
+  <section id="guest" class="glass hidden">
+    <div class="welcome-kicker">WELCOME</div>
+    <div id="guest-name"></div>
+    <div id="guest-msg" class="dim"></div>
+    <div class="wifi">
+      <div id="wifi-qr"></div>
+      <div class="wifi-text">
+        <div class="label">GUEST WI-FI</div>
+        <div id="wifi-ssid"></div>
+        <div id="wifi-pass"></div>
+        <div class="dim small">Point your phone camera at the code to join.</div>
+      </div>
+    </div>
+    <div id="guest-sched"></div>
+    <div id="house-info"></div>
+  </section>
+
+  <!-- left: countdowns + notes -->
+  <section id="left" class="stack">
+    <div id="countdowns"></div>
+    <div id="notes" class="glass hidden">
+      <header><span>FROM CLAUDE</span><span id="notes-at" class="dim"></span></header>
+      <ul id="notes-list"></ul>
+    </div>
+  </section>
+
+  <!-- incident callout (appears during fly-to) -->
+  <section id="callout" class="glass hidden">
+    <header><span id="co-kind">INCIDENT</span><span id="co-delay"></span></header>
+    <div id="co-road"></div>
+    <div id="co-text" class="dim"></div>
+    <div id="co-cam" class="hidden"><img id="co-img" alt=""><div class="cam-tag"><span class="dot live"></span> FDOT <span id="co-camid"></span></div></div>
+  </section>
+
+  <!-- bottom: commutes + ticker -->
+  <section id="bottom">
+    <div id="commutes"></div>
+    <div id="ticker"><span class="tag">SITREP</span><div class="track"><span id="ticker-text">Initializing sensors…</span></div></div>
+  </section>
+</main>
+<script type="module" src="tv.js"></script>
+</body>
+</html>
