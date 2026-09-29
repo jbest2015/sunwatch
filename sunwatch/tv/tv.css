@@ -74,10 +74,10 @@ html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; backgro
 #guest-name { font: 700 96px/1 var(--head); margin: 8px 0 6px; }
 #guest-msg { font: 400 26px/1.35 var(--head); margin-bottom: 18px; }
 .wifi { display: flex; gap: 26px; align-items: center; padding: 18px; border: 1px solid var(--edge); border-radius: 6px; background: rgba(111,227,255,.06); }
-#wifi-qr svg { width: 230px; height: 230px; display: block; }
+#wifi-qr svg { width: 200px; height: 200px; display: block; }
 .wifi .label { font: 600 17px var(--mono); letter-spacing: .3em; color: var(--cyan); }
 #wifi-ssid { font: 700 44px var(--head); margin-top: 6px; }
-#wifi-pass { font: 600 28px var(--mono); margin: 6px 0 10px; word-break: break-all; }
+#wifi-pass { font: 600 24px var(--mono); margin: 6px 0 10px; white-space: nowrap; }
 #guest-sched, #house-info { margin-top: 20px; }
 .gi { display: grid; grid-template-columns: 170px 1fr; gap: 14px; padding: 8px 0; border-top: 1px solid rgba(111,227,255,.1); font: 500 24px/1.25 var(--head); }
 .gi .k { font: 600 19px var(--mono); color: var(--cyan); }
