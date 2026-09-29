@@ -252,11 +252,36 @@ export function mountHearth(app, { hearthDir, tomtomKey, log = console }) {
         line: coords.length > 1 ? coords.map(([x, y]) => [+x.toFixed(5), +y.toFixed(5)]) : null,
       };
     });
-    // "Major" = serious delay, closures, or crashes. Road work is shown only when it hurts.
-    const score = (i) => (i.icon === 1 ? 50 : 0) + (i.icon === 8 ? 40 : 0) + i.magnitude * 12 + Math.min(i.delayMin, 40) + (i.icon === 9 ? -25 : 0);
-    list.forEach((i) => (i.score = score(i)));
-    list.sort((a, b) => b.score - a.score);
-    return { at: Date.now(), center: h, radiusKm: r, incidents: list.filter((i) => i.score >= 20).slice(0, 12), total: list.length };
+    // "Major" means it would change a drive: crashes, real delays, or closures on
+    // numbered/long roads. Neighborhood street closures and routine road work
+    // (TomTom reports ~150 of those around Tampa at any time) are ignored.
+    const km = (i) => Math.hypot((i.lat - h.lat) * 111, (i.lon - h.lon) * 111 * Math.cos((h.lat * Math.PI) / 180));
+    const score = (i) => {
+      const numbered = !!i.road;
+      const mag = i.magnitude >= 1 && i.magnitude <= 3 ? i.magnitude : 0;
+      let s = mag * 10 + Math.min(i.delayMin, 45) * 1.5;
+      if (i.icon === 1) s += 45; // crash
+      if (i.icon === 14) s += 15; // broken-down vehicle
+      if (i.icon === 8) s += numbered || i.lengthKm >= 1 ? 35 : -100; // closure
+      if (i.icon === 9 || i.icon === 7) s += i.delayMin >= 10 ? 0 : -100; // road work / lane closed
+      if (numbered) s += 12;
+      s -= km(i) * 0.8; // nearer matters more
+      return Math.round(s);
+    };
+    const seen = new Set();
+    const major = list
+      .filter((i) => km(i) <= r)
+      .map((i) => ({ ...i, score: score(i), distKm: +km(i).toFixed(1) }))
+      .filter((i) => i.score >= 25)
+      .sort((a, b) => b.score - a.score)
+      .filter((i) => {
+        // TomTom often lists both directions of one event; keep one.
+        const k = [i.icon, [i.from, i.to].sort().join('|')].join(':');
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+    return { at: Date.now(), center: h, radiusKm: r, incidents: major.slice(0, 10), total: list.length };
   });
 
   // ---------- guest mode ----------
