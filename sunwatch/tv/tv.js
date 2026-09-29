@@ -125,7 +125,7 @@ async function loadState() {
   $('guest').classList.toggle('hidden', !g);
   $('notes').classList.toggle('hidden', !!g || !STATE.notes.length);
   $('notes-list').innerHTML = STATE.notes.slice(0, 4).map((l) => `<li>${esc(l)}</li>`).join('');
-  $('notes-at').textContent = STATE.notesAt ? new Date(STATE.notesAt).toLocaleDateString('en-US', { timeZone: TZ, month: 'short', day: 'numeric' }).toUpperCase() : '';
+  $('notes-at').textContent = STATE.notesAt ? new Date(String(STATE.notesAt).length === 10 ? STATE.notesAt + 'T12:00:00' : STATE.notesAt).toLocaleDateString('en-US', { timeZone: TZ, month: 'short', day: 'numeric' }).toUpperCase() : '';
   if (g) {
     $('guest-name').textContent = g.name;
     $('guest-msg').textContent = g.message;
@@ -213,6 +213,7 @@ async function bootGlobe() {
   hideGlobeChrome(f.contentDocument);
   G.v.scene.requestRenderMode = false;
   startOrbit(STATE.home);
+  drawIncidents();
   director();
 }
 
@@ -225,6 +226,7 @@ function hideGlobeChrome(doc) {
     .cesium-viewer-toolbar, .cesium-viewer-animationContainer, .cesium-viewer-timelineContainer,
     .cesium-viewer-fullscreenContainer, .cesium-viewer-bottom .cesium-credit-logoContainer { display: none !important; }
     .cesium-viewer-bottom { opacity: .55; transform: scale(.85); transform-origin: left bottom; }
+    #data-panel, #hud-rec-dot, .panel-collapsible, .panel-glow { display: none !important; }
     * { cursor: none !important; }`;
   doc.head.appendChild(s);
 }
@@ -352,8 +354,10 @@ async function nearestCamera(lat, lon, maxKm = 2.5) {
 // ---------------------------------------------------------------- director: orbit ⇄ visit incidents
 async function director() {
   await sleep(4000);
+  let first = qs.has('visit'); // ?visit previews an incident fly-in right away
   for (;;) {
-    await sleep((STATE.rotate.orbitSeconds || 75) * 1000);
+    await sleep(first ? 3000 : (STATE.rotate.orbitSeconds || 75) * 1000);
+    first = false;
     const target = INCIDENTS.find((i) => !i._seenAt || Date.now() - i._seenAt > 20 * 60e3) || INCIDENTS[0];
     if (!target || STATE.guest?.quiet) continue;
     target._seenAt = Date.now();
