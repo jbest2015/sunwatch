@@ -185,6 +185,8 @@ export function mountHearth(app, { hearthDir, tomtomKey, httpServer, log = conso
         for (const r of Object.values(ev.recurrences || {})) if (r.start >= from && r.start <= to) push(r.start);
       } else if (ev.start && +ev.start <= +to && +ev.start + Math.max(durMs, 1) >= +from) push(ev.start);
     }
+    // Optional synthetic events from config (testing only; normally absent).
+    for (const t of (await config()).testEvents || []) events.push({ allDay: false, location: '', ...t });
     events.sort((a, b) => a.start.localeCompare(b.start));
     return { at: Date.now(), events };
   });
