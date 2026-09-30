@@ -409,7 +409,7 @@ export function mountHearth(app, { hearthDir, tomtomKey, httpServer, log = conso
             think: false,
             options: { temperature: 0.5, num_predict: 160 },
             prompt:
-              'Write a warm, brief good-morning briefing for John, shown on his living-room TV. Two or three short sentences, under 55 words total, plain text, no emoji, no dollar amounts, no greeting line (the screen already says Good morning). Cover what matters today: weather, the first commitment and when to leave if there is a trip, anything notable on the roads. Use only these facts:\n' +
+              'Write a warm, brief good-morning briefing for John, shown on his living-room TV. Two or three short sentences, under 55 words total, plain text, no emoji, no dollar amounts, no greeting line (the screen already says Good morning). Cover what matters today: weather, the first commitment, and anything notable on nearby roads. Only mention a departure or leave-by time if the trip field is present; never invent one. Use only these facts:\n' +
               JSON.stringify(facts),
           }),
         });
