@@ -271,9 +271,11 @@ export function mountHearth(app, { hearthDir, tomtomKey, httpServer, log = conso
     const trip = await nextTrip(c).catch(() => null);
     if (trip) {
       const dup = out.findIndex((r) => r.name === trip.name);
-      if (dup >= 0) out.splice(dup, 1);
-      out.splice(1, 0, trip);
-      out.length = Math.min(out.length, 4);
+      if (dup >= 0) out[dup] = trip; // same place as a pinned tile: upgrade it in place
+      else {
+        out.splice(1, 0, trip);
+        out.length = Math.min(out.length, 4);
+      }
     }
     return { at: Date.now(), routes: out };
   });
