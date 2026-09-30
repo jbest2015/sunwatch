@@ -226,6 +226,7 @@ async function bootGlobe() {
   updateStorm();
   director();
   if (qs.has('greet')) setTimeout(showGreeting, 6000);
+  window.__hearth = { TAGS, camState, G, get STORM() { return STORM; }, refreshPlaneTags, houseDip }; // debug hook for tests
 }
 
 // Hide the interactive SunWatch UI; keep the canvas and attribution.
@@ -295,6 +296,10 @@ function flyTo(to, ms) {
 }
 
 function startOrbit(h) {
+  if (qs.get('focus')) {
+    const [la, lo] = qs.get('focus').split(',').map(Number);
+    h = { lat: la, lon: lo };
+  }
   Object.assign(camState, { lat: h.lat, lon: h.lon, range: STATE.orbit.range || 11000, pitch: STATE.orbit.pitch || -30, heading: 20 });
   orbitSpeed = STATE.orbit.speed || 2.2;
   requestAnimationFrame(frame);
