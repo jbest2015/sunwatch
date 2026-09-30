@@ -456,7 +456,7 @@ function applyDayNight() {
   const now = new Date();
   const { rise, set } = sunTimes(now, STATE.home.lat, STATE.home.lon);
   $('sun').textContent = `SUNRISE ${fmtTime(rise).replace(' ', '')}  ·  SUNSET ${fmtTime(set).replace(' ', '')}`;
-  const night = qs.has('night') ? qs.get('night') !== '0' : now < new Date(+rise - 20 * 60e3) || now > new Date(+set + 20 * 60e3);
+  const night = qs.has('night') ? qs.get('night') !== '0' : now < new Date(+rise - 40 * 60e3) || now > new Date(+set + 20 * 60e3);
   const h = hourNow();
   document.body.classList.toggle('late', qs.has('late') || h >= (STATE.night.lateAmberHour ?? 22) || h < 5);
   document.body.classList.toggle('night', h >= 23 || h < 5);

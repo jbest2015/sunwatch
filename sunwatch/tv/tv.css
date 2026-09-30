@@ -159,13 +159,13 @@ body.night { filter: brightness(.7); }
 #st-sub { font: 400 22px var(--head); margin-top: 6px; }
 
 /* ---- morning greeting ---- */
-#greet { position: absolute; inset: 0; padding: 120px 140px; background: radial-gradient(ellipse at 30% 40%, rgba(4,12,20,.35), rgba(0,0,0,.82) 75%); animation: fadein 2.5s ease-out; }
+#greet { position: absolute; inset: 0 0 150px 0; padding: 80px 140px; background: radial-gradient(ellipse at 30% 40%, rgba(4,12,20,.35), rgba(0,0,0,.82) 75%); animation: fadein 2.5s ease-out; }
 @keyframes fadein { from { opacity: 0; } }
 body.greeting #clock, body.greeting #wx, body.greeting #sched, body.greeting #left, body.greeting #callout, body.greeting #storm { opacity: 0; transition: opacity 1.5s; }
 .g-kicker { font: 600 30px var(--mono); letter-spacing: .6em; color: var(--cyan); }
-.g-name { font: 700 190px/1 var(--head); letter-spacing: -.01em; text-shadow: 0 6px 60px rgba(0,0,0,.7); }
+.g-name { font: 700 160px/1 var(--head); letter-spacing: -.01em; text-shadow: 0 6px 60px rgba(0,0,0,.7); }
 #g-date { font: 500 40px var(--head); color: var(--dim); margin-top: 6px; }
-.g-row { display: flex; gap: 28px; margin-top: 46px; }
+.g-row { display: flex; gap: 28px; margin-top: 34px; }
 .g-card { background: var(--glass); border: 1px solid var(--edge); border-radius: 6px; padding: 24px 30px; backdrop-filter: blur(14px); min-width: 420px; }
 .g-card .k { font: 600 18px var(--mono); letter-spacing: .24em; color: var(--cyan); margin-bottom: 10px; }
 .g-wx-big { font: 700 96px/1 var(--head); }
@@ -174,4 +174,4 @@ body.greeting #clock, body.greeting #wx, body.greeting #sched, body.greeting #le
 .g-ev .t { font: 600 24px var(--mono); color: var(--cyan); }
 .g-ev.onsite .t { color: var(--amber); }
 .g-trip { margin-top: 12px; font: 700 28px var(--mono); color: var(--amber); }
-#g-text { margin-top: 38px; max-width: 1400px; font: 400 36px/1.4 var(--head); color: var(--ink); }
+#g-text { margin-top: 28px; max-width: 1500px; font: 400 32px/1.4 var(--head); color: var(--ink); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
