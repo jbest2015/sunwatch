@@ -422,6 +422,10 @@ async function houseDip() {
   const h = STATE.home;
   G.homeEnt.label.show = true;
   G.homeEnt.billboard.scale = 0.7;
+  if (G.C2) {
+    G.homeEnt.label.verticalOrigin = 1;
+    G.homeEnt.label.pixelOffset = new G.C2(0, -42);
+  }
   await flyTo({ lat: h.lat, lon: h.lon, range: 850, pitch: -55 }, 7000);
   const saved = orbitSpeed;
   orbitSpeed = 3.5;
