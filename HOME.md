@@ -57,3 +57,24 @@ TomTom (free tier, 2,500/day): routing for 4 destinations every 8 min plus incid
 - Cast to a Chromecast (Bravia "TV 1" = 192.168.4.33, Nest Hubs .37 kitchen / .52 bedroom): `~/hearth/bin/cast.py IP` (MP4, live); `cast.py IP stop`. HLS fails on the Bravia's old Cast firmware; MP4 capped at ~3 Mbps is stable.
 - `~/hearth/bin/display-watchdog.sh` (started from the sway config): when the LG switches inputs, sway can stop getting page flips and all frame consumers freeze. Every 30 s it probes screencopy with grim and power-cycles the output if it hangs (logged as `hearth-watchdog`).
 - Kiosk runs sway with `WLR_NO_DIRECT_SCANOUT=1`: with direct scanout, screencopy stalled and froze the mirror. The watchdog now only power-cycles after 3 consecutive failed probes.
+
+## Daily rhythm (added Sept 30)
+
+| Time | What happens |
+|---|---|
+| 06:34 | Page warms the morning briefing (Ollama) so it's ready |
+| 06:44 | `hearth-tv-on.timer` → `tv-power.sh on`: output un-blanked, Wake-on-LAN ×6 to the LG (needs "Turn on via Wi-Fi"), input set if paired |
+| 06:45 | "Good morning, John" overlay for 80 s: weather, today's events (on-site ones in amber), leave-by for a calendar trip, AI briefing; camera drifts over the house |
+| 40 min before sunrise → 20 min after sunset | normal satellite look; otherwise night-vision (`night.style`, default `surveillance`) |
+| 22:00–05:00 | amber HUD; 23:00–05:00 also dimmed |
+| 23:30 | `hearth-tv-off.timer` → `tv-power.sh off`: output blanked (flag `~/hearth/.display-off` pauses the watchdog), power-off if paired |
+
+Config keys (`~/hearth/config.json`): `wake.time`, `wake.greetSeconds`, `night.style`, `night.lateAmberHour`, `features.{houseDip,planeTags,storm}`, `storm.{lightningKm,rainKm}`, `onsitePlaces[]` (`match`/`name`/`address`), `tripLookaheadHours`, `tripBufferMin`, `flightBufferMin`.
+
+## Director rotation
+
+Each cycle (`rotate.orbitSeconds`, default 75 s) ends in one visit: worst traffic incident (with FDOT camera), every 4th cycle a dip to the house (HOME marker), every 3rd cycle a radar pass when rain is within `storm.rainKm`. Storm mode (lightning within `storm.lightningKm` ≈ 10 mi, or any NWS *Warning*) overrides everything: radar + lightning layers on, camera pulled back, banner; clears 30 min after the last hit. Plane tags label up to 6 aircraft near the camera target using the flights layer's billboards.
+
+## Endpoints
+
+`/api/hearth/storm` (nowCOAST lightning + radar nearest-pixel around the house), `/api/hearth/brief` (morning briefing), `/api/hearth/commutes` now includes a calendar trip (`featured: true`, `leaveBy`). Previews: `/tv/?greet`, `?storm=test`, `?dip`, `?radar`, `?night=0|1`, `?late`, `?focus=lat,lon`, `?tagradius=km`. Probe runner: `sunwatch/tv-dev/run.mjs`.
