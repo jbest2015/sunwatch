@@ -618,6 +618,22 @@ function checkGreeting() {
   }
   if (hmNow() === wake && greetedDay !== dayKey(new Date())) showGreeting();
 }
+// Fallback when the TV could not be woken at wake time: greet the first time the
+// TV is switched on during the morning window (wake time → 11:00).
+let tvWasUp = null;
+async function watchTv() {
+  let up;
+  try {
+    up = (await api('tv')).up;
+  } catch {
+    return;
+  }
+  const wake = STATE?.wake?.time || '06:45';
+  const hm = hmNow();
+  const inWindow = hm >= wake && hm < (STATE?.wake?.windowEnd || '11:00');
+  if (up && tvWasUp === false && inWindow && greetedDay !== dayKey(new Date()) && !GREETING) showGreeting();
+  tvWasUp = up;
+}
 async function showGreeting() {
   greetedDay = dayKey(new Date());
   checkGreeting.warmed = false;
@@ -699,6 +715,8 @@ async function main() {
   loadStorm();
   setInterval(loadStorm, 3 * 60e3);
   setInterval(refreshPlaneTags, 3000);
+  watchTv();
+  setInterval(watchTv, 10000);
   // Daily hard refresh at 4:10am keeps WebGL memory fresh on a 24/7 kiosk.
   setInterval(() => {
     const t = new Date().toLocaleTimeString('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });

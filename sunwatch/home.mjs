@@ -9,6 +9,7 @@ import path from 'node:path';
 import ical from 'node-ical';
 import QRCode from 'qrcode';
 import { PNG } from 'pngjs';
+import net from 'node:net';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 
 const UA = 'SunWatch-Hearth/0.1 (home dashboard)';
@@ -504,6 +505,18 @@ export function mountHearth(app, { hearthDir, tomtomKey, httpServer, log = conso
   router.get('/incidents', safe(incidents));
   router.get('/sitrep', safe(sitrep));
   router.get('/storm', safe(storm));
+  // Is the LG awake? webOS listens on 3001 only when the TV is on (Quick Start standby closes it).
+  const tvUp = memo(15e3, async () => {
+    const ip = secrets().LGTV_IP;
+    if (!ip) return { up: null };
+    const up = await new Promise((res) => {
+      const sock = net.connect({ host: ip, port: 3001, timeout: 1500 }, () => (sock.destroy(), res(true)));
+      sock.on('error', () => res(false));
+      sock.on('timeout', () => (sock.destroy(), res(false)));
+    });
+    return { at: Date.now(), up };
+  });
+  router.get('/tv', safe(tvUp));
   router.get('/brief', safe(brief));
   router.get(
     '/state',
