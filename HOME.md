@@ -45,3 +45,12 @@ ssh claude@192.168.5.16 'sudo systemctl restart hearth-kiosk'
 ## Provider budget
 
 TomTom (free tier, 2,500/day): routing for 4 destinations every 8 min plus incidents every 3 min comes to ~1,200/day, plus the globe's traffic tiles. NWS, FL511 and Google iCal need no keys.
+
+## Screen mirror (phones, Pi, Chromecast)
+
+`hearth-go2rtc.service` runs go2rtc (`~/hearth/bin/go2rtc`, config `~/hearth/go2rtc.yaml`, API on 127.0.0.1:1984, base path `/mirror`, WebRTC on :8555). The `tv` stream is `exec:~/hearth/bin/mirror.sh`: wf-recorder captures HDMI-A-1 at 15 fps and encodes x264 (software, baseline, ~1 core) only while someone is watching. The Hearth server proxies `/mirror` behind the same key.
+
+- Watch (WebRTC): `http://192.168.5.16:4180/mirror/stream.html?src=tv&k=KEY`
+- MP4 for casting: `http://192.168.5.16:4180/mirror/api/stream.mp4?src=tv&k=KEY`
+- The mirror shows exactly what the LG shows, so keep it public-only once private mode exists.
+- HD 530 hardware encode (VAAPI) needs HuC firmware (`i915.enable_guc=2`); untested.

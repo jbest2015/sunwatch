@@ -281,6 +281,7 @@ if (process.env.HEARTH_DIR) {
   mountHearth(app, {
     hearthDir: process.env.HEARTH_DIR,
     tomtomKey: process.env.TOMTOM_API_KEY,
+    httpServer,
   });
   app.use('/tv', express.static(path.join(dir, 'tv'), { maxAge: 0 }));
 }

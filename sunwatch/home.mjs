@@ -8,6 +8,7 @@ import fss from 'node:fs';
 import path from 'node:path';
 import ical from 'node-ical';
 import QRCode from 'qrcode';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 const UA = 'SunWatch-Hearth/0.1 (home dashboard)';
 
@@ -67,7 +68,7 @@ const tidy = (t) =>
   t.replace(MONEY, '').replace(/,\s*\)/g, ')').replace(/\(\s*\)/g, '').replace(/\s{2,}/g, ' ').trim();
 const MONEY = /\$\s?\d[\d,]*(\.\d+)?|\b\d[\d,]*(\.\d\d)\b/g;
 
-export function mountHearth(app, { hearthDir, tomtomKey, log = console }) {
+export function mountHearth(app, { hearthDir, tomtomKey, httpServer, log = console }) {
   const secrets = () => readEnvFile(path.join(hearthDir, 'secrets.env'));
   const config = () => readJson(path.join(hearthDir, 'config.json'), {});
   const router = express.Router();
@@ -399,18 +400,29 @@ export function mountHearth(app, { hearthDir, tomtomKey, log = console }) {
   // Access control: the TV (loopback) needs nothing. Any other device must know
   // HEARTH_TOKEN: open /tv/?k=TOKEN once and a year-long cookie is set. This keeps
   // the calendar and guest Wi-Fi password off the open LAN/Tailscale.
-  app.use(['/tv', '/api/hearth'], (req, res, next) => {
-    const ip = req.socket.remoteAddress || '';
-    if (/^(::1|127\.|::ffff:127\.)/.test(ip)) return next();
+  const isLocal = (req) => /^(::1|127\.|::ffff:127\.)/.test(req.socket.remoteAddress || '');
+  const cookieOk = (req) => {
     const token = secrets().HEARTH_TOKEN;
-    if (!token) return res.status(403).send('Remote access is not configured.');
     const cookie = /(?:^|;\s*)hearth=([^;]+)/.exec(req.headers.cookie || '')?.[1];
-    if (cookie === token) return next();
-    if (req.query.k === token) {
-      res.setHeader('Set-Cookie', `hearth=${token}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Strict`);
-      return next();
-    }
-    res.status(403).send('Not authorized.');
+    const q = new URL(req.url, 'http://x').searchParams.get('k');
+    return token && (cookie === token || q === token) ? (q === token ? 'query' : 'cookie') : null;
+  };
+  app.use(['/tv', '/api/hearth', '/mirror'], (req, res, next) => {
+    if (isLocal(req)) return next();
+    const ok = cookieOk(req);
+    if (!secrets().HEARTH_TOKEN) return res.status(403).send('Remote access is not configured.');
+    if (!ok) return res.status(403).send('Not authorized.');
+    if (ok === 'query') res.setHeader('Set-Cookie', `hearth=${secrets().HEARTH_TOKEN}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax`);
+    next();
+  });
+  // Screen mirror: go2rtc on 127.0.0.1:1984 (base_path /mirror) serves WebRTC,
+  // MP4 and HLS of the TV output. Proxied here so the same key protects it.
+  const mirror = createProxyMiddleware({ target: 'http://127.0.0.1:1984', ws: true, pathFilter: '/mirror', logger: undefined });
+  app.use(mirror);
+  httpServer?.on('upgrade', (req, socket, head) => {
+    if (!req.url.startsWith('/mirror')) return;
+    if (!isLocal(req) && !cookieOk(req)) return socket.destroy();
+    mirror.upgrade(req, socket, head);
   });
   app.use('/api/hearth', router);
   log.log?.('[hearth] TV mode mounted from ' + hearthDir);
