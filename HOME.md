@@ -54,3 +54,5 @@ TomTom (free tier, 2,500/day): routing for 4 destinations every 8 min plus incid
 - MP4 for casting: `http://192.168.5.16:4180/mirror/api/stream.mp4?src=tv&k=KEY`
 - The mirror shows exactly what the LG shows, so keep it public-only once private mode exists.
 - HD 530 hardware encode (VAAPI) needs HuC firmware (`i915.enable_guc=2`); untested.
+- Cast to a Chromecast (Bravia "TV 1" = 192.168.4.33, Nest Hubs .37 kitchen / .52 bedroom): `~/hearth/bin/cast.py IP` (MP4, live); `cast.py IP stop`. HLS fails on the Bravia's old Cast firmware; MP4 capped at ~3 Mbps is stable.
+- `~/hearth/bin/display-watchdog.sh` (started from the sway config): when the LG switches inputs, sway can stop getting page flips and all frame consumers freeze. Every 30 s it probes screencopy with grim and power-cycles the output if it hangs (logged as `hearth-watchdog`).
