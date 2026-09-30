@@ -409,6 +409,9 @@ export function mountHearth(app, { hearthDir, tomtomKey, httpServer, log = conso
   };
   app.use(['/tv', '/api/hearth', '/mirror'], (req, res, next) => {
     if (isLocal(req)) return next();
+    // HLS segment/playlist URLs carry a random per-session id issued by the
+    // keyed master playlist; Chromecasts send no cookies, so allow those.
+    if (req.originalUrl.startsWith('/mirror/api/hls/') && /[?&]id=\w{6,}/.test(req.originalUrl)) return next();
     const ok = cookieOk(req);
     if (!secrets().HEARTH_TOKEN) return res.status(403).send('Remote access is not configured.');
     if (!ok) return res.status(403).send('Not authorized.');
