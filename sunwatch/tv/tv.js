@@ -566,7 +566,7 @@ function refreshPlaneTags() {
     const b = BBC.get(i);
     if (b.show !== false) idx.set(b.id, b);
   }
-  const R = Math.max(6, (camState.range / 1000) * 1.3);
+  const R = +qs.get('tagradius') || Math.max(6, (camState.range / 1000) * 1.3);
   const near = recs
     .filter((r) => !r.onGround && r.lat != null && idx.has(r.icao24))
     .map((r) => ({ r, d: Math.hypot((r.lat - camState.lat) * 111, (r.lon - camState.lon) * 97) }))
