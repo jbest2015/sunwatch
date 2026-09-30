@@ -48,7 +48,7 @@ TomTom (free tier, 2,500/day): routing for 4 destinations every 8 min plus incid
 
 ## Screen mirror (phones, Pi, Chromecast)
 
-`hearth-go2rtc.service` runs go2rtc (`~/hearth/bin/go2rtc`, config `~/hearth/go2rtc.yaml`, API on 127.0.0.1:1984, base path `/mirror`, WebRTC on :8555). The `tv` stream is `exec:~/hearth/bin/mirror.sh`: wf-recorder captures HDMI-A-1 at 15 fps and encodes x264 (software, baseline, ~1 core) only while someone is watching. The Hearth server proxies `/mirror` behind the same key.
+`hearth-go2rtc.service` runs go2rtc (`~/hearth/bin/go2rtc`, config `~/hearth/go2rtc.yaml`, API on 127.0.0.1:1984, base path `/mirror`, WebRTC on :8555). The `tv` stream is `exec:~/hearth/bin/mirror.sh`: wf-recorder captures HDMI-A-1, scales to 720p at 10 fps and encodes x264 (software, baseline, capped at 1.5 Mbps, ~1 core) only while someone is watching. The Hearth server proxies `/mirror` behind the same key.
 
 - Watch (WebRTC): `http://192.168.5.16:4180/mirror/stream.html?src=tv&k=KEY`
 - MP4 for casting: `http://192.168.5.16:4180/mirror/api/stream.mp4?src=tv&k=KEY`
@@ -56,3 +56,4 @@ TomTom (free tier, 2,500/day): routing for 4 destinations every 8 min plus incid
 - HD 530 hardware encode (VAAPI) needs HuC firmware (`i915.enable_guc=2`); untested.
 - Cast to a Chromecast (Bravia "TV 1" = 192.168.4.33, Nest Hubs .37 kitchen / .52 bedroom): `~/hearth/bin/cast.py IP` (MP4, live); `cast.py IP stop`. HLS fails on the Bravia's old Cast firmware; MP4 capped at ~3 Mbps is stable.
 - `~/hearth/bin/display-watchdog.sh` (started from the sway config): when the LG switches inputs, sway can stop getting page flips and all frame consumers freeze. Every 30 s it probes screencopy with grim and power-cycles the output if it hangs (logged as `hearth-watchdog`).
+- Kiosk runs sway with `WLR_NO_DIRECT_SCANOUT=1`: with direct scanout, screencopy stalled and froze the mirror. The watchdog now only power-cycles after 3 consecutive failed probes.
