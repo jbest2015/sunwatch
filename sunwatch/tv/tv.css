@@ -130,3 +130,48 @@ body.guest #wx { top: auto; bottom: 214px; left: var(--pad); right: auto; width:
 body.guest #wx #wx-spark, body.guest #wx .hours { display: none; }
 body.guest #left { top: 330px; }
 body.night { filter: brightness(.55); }
+
+/* ---- late-night amber (easier on the eyes in a dark room) ---- */
+body.late { --cyan: #ffb547; --cyan-soft: rgba(255,181,71,.28); --edge: rgba(255,181,71,.22); --ink: #ffe7c7; --dim: rgba(255,225,190,.58); }
+body.late #ticker .tag { background: #ffb547; }
+body.night { filter: brightness(.7); }
+#sun { font: 500 19px var(--mono); letter-spacing: .12em; margin-top: 10px; }
+
+/* ---- schedule: on-site meetings ---- */
+.ev.onsite .t { color: var(--amber); }
+.ev.onsite .n::before { content: '◆ '; color: var(--amber); font-size: .8em; }
+.ev.onsite .n .l { color: var(--amber); opacity: .8; }
+
+/* ---- commute: calendar trip tile ---- */
+.cm.trip { border-color: rgba(255,181,71,.55); background: rgba(40,26,4,.55); flex-direction: column; align-items: stretch; gap: 2px; padding: 10px 18px; }
+.cm.trip .row { display: flex; justify-content: space-between; align-items: baseline; }
+.cm.trip .ev-name { font: 600 16px var(--mono); color: var(--amber); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cm.trip .leave { font: 700 20px var(--mono); color: var(--amber); }
+.cm.trip .m { font-size: 40px; }
+
+/* ---- storm banner ---- */
+#storm { left: 50%; top: 40px; transform: translateX(-50%); width: 640px; border-color: rgba(160,190,255,.55); text-align: center; animation: in .5s ease-out; }
+#storm::before, #storm::after { border-color: #a9c4ff; }
+#storm header { color: #a9c4ff; justify-content: center; gap: 24px; }
+#st-main { font: 700 48px/1.1 var(--head); color: #fff; text-shadow: 0 0 24px rgba(169,196,255,.8); }
+#st-main.flash { animation: flash 2.4s infinite; }
+@keyframes flash { 0%, 100% { opacity: 1; } 4% { opacity: .25; } 8% { opacity: 1; } 12% { opacity: .5; } 16% { opacity: 1; } }
+#st-sub { font: 400 22px var(--head); margin-top: 6px; }
+
+/* ---- morning greeting ---- */
+#greet { position: absolute; inset: 0; padding: 120px 140px; background: radial-gradient(ellipse at 30% 40%, rgba(4,12,20,.35), rgba(0,0,0,.82) 75%); animation: fadein 2.5s ease-out; }
+@keyframes fadein { from { opacity: 0; } }
+body.greeting #clock, body.greeting #wx, body.greeting #sched, body.greeting #left, body.greeting #callout, body.greeting #storm { opacity: 0; transition: opacity 1.5s; }
+.g-kicker { font: 600 30px var(--mono); letter-spacing: .6em; color: var(--cyan); }
+.g-name { font: 700 190px/1 var(--head); letter-spacing: -.01em; text-shadow: 0 6px 60px rgba(0,0,0,.7); }
+#g-date { font: 500 40px var(--head); color: var(--dim); margin-top: 6px; }
+.g-row { display: flex; gap: 28px; margin-top: 46px; }
+.g-card { background: var(--glass); border: 1px solid var(--edge); border-radius: 6px; padding: 24px 30px; backdrop-filter: blur(14px); min-width: 420px; }
+.g-card .k { font: 600 18px var(--mono); letter-spacing: .24em; color: var(--cyan); margin-bottom: 10px; }
+.g-wx-big { font: 700 96px/1 var(--head); }
+.g-wx-line { font: 500 26px var(--head); margin-top: 6px; }
+.g-ev { display: grid; grid-template-columns: 120px 1fr; gap: 12px; font: 500 28px/1.35 var(--head); }
+.g-ev .t { font: 600 24px var(--mono); color: var(--cyan); }
+.g-ev.onsite .t { color: var(--amber); }
+.g-trip { margin-top: 12px; font: 700 28px var(--mono); color: var(--amber); }
+#g-text { margin-top: 38px; max-width: 1400px; font: 400 36px/1.4 var(--head); color: var(--ink); }

@@ -192,13 +192,15 @@ export function mountHearth(app, { hearthDir, tomtomKey, httpServer, log = conso
   async function calendar() {
     const c = await config();
     const hide = (c.calendarHide || []).map((s) => s.toLowerCase());
+    const homeKey = (c.home?.address || '').split(',')[0].toLowerCase();
+    const atHome = (e) => homeKey && e.location.toLowerCase().includes(homeKey);
     const raw = await calendarRaw();
     return {
       at: raw.at,
       stale: raw.stale,
       events: raw.events
         .filter((e) => !hide.some((h) => (e.title + ' ' + e.location).toLowerCase().includes(h)))
-        .map((e) => ({ ...e, title: tidy(e.title), location: VIRTUAL.test(e.location) ? '' : e.location.split(',')[0], onsite: isOnsite(e) })),
+        .map((e) => ({ ...e, title: tidy(e.title), location: VIRTUAL.test(e.location) ? '' : e.location.split(',')[0], onsite: isOnsite(e) && !atHome(e), atHome: !!atHome(e) })),
     };
   }
 
@@ -221,6 +223,8 @@ export function mountHearth(app, { hearthDir, tomtomKey, httpServer, log = conso
     for (const e of raw) {
       if (e.allDay || +new Date(e.start) < now - 10 * 60e3 || +new Date(e.start) > now + (c.tripLookaheadHours || 18) * 3600e3) continue;
       if (hide.some((h) => (e.title + ' ' + e.location).toLowerCase().includes(h))) continue;
+      const homeKey = (c.home?.address || '').split(',')[0].toLowerCase();
+      if (homeKey && e.location.toLowerCase().includes(homeKey)) continue; // appointment at the house
       let place = null,
         buffer = c.tripBufferMin ?? 10,
         kind = 'meeting';
@@ -237,7 +241,9 @@ export function mountHearth(app, { hearthDir, tomtomKey, httpServer, log = conso
       if (!place) continue;
       try {
         const g = place.lat ? place : await geocode(place.address);
-        const r = await route(await home(), g);
+        const hh = await home();
+        if (Math.hypot((g.lat - hh.lat) * 111, (g.lon - hh.lon) * 97) < 1.5) continue; // effectively home
+        const r = await route(hh, g);
         const leaveBy = new Date(+new Date(e.start) - (r.minutes + buffer) * 60e3);
         return { name: place.name, ...r, lat: g.lat, lon: g.lon, featured: true, kind, event: tidy(e.title), start: e.start, leaveBy: leaveBy.toISOString() };
       } catch (err) {

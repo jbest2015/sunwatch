@@ -66,6 +66,25 @@
     </div>
   </section>
 
+  <!-- storm banner (lightning within ~10 mi or an NWS warning) -->
+  <section id="storm" class="glass hidden">
+    <header><span id="st-kind">STORM WATCH</span><span id="st-age" class="dim"></span></header>
+    <div id="st-main"></div>
+    <div id="st-sub" class="dim"></div>
+  </section>
+
+  <!-- morning greeting -->
+  <section id="greet" class="hidden">
+    <div class="g-kicker">GOOD MORNING</div>
+    <div class="g-name">JOHN</div>
+    <div id="g-date"></div>
+    <div class="g-row">
+      <div class="g-card" id="g-wx"></div>
+      <div class="g-card" id="g-day"></div>
+    </div>
+    <div id="g-text"></div>
+  </section>
+
   <!-- incident callout (appears during fly-to) -->
   <section id="callout" class="glass hidden">
     <header><span id="co-kind">INCIDENT</span><span id="co-delay"></span></header>
