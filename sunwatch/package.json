@@ -14,7 +14,8 @@
     "papaparse": "5.5.3",
     "node-ical": "0.27.2",
     "qrcode": "1.5.4",
-    "http-proxy-middleware": "3.0.5"
+    "http-proxy-middleware": "3.0.5",
+    "pngjs": "7.0.0"
   },
   "engines": {
     "node": ">=24"

@@ -8,6 +8,7 @@ import fss from 'node:fs';
 import path from 'node:path';
 import ical from 'node-ical';
 import QRCode from 'qrcode';
+import { PNG } from 'pngjs';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 
 const UA = 'SunWatch-Hearth/0.1 (home dashboard)';
@@ -67,6 +68,11 @@ function memo(ttlMs, fn) {
 const tidy = (t) =>
   t.replace(MONEY, '').replace(/,\s*\)/g, ')').replace(/\(\s*\)/g, '').replace(/\s{2,}/g, ' ').trim();
 const MONEY = /\$\s?\d[\d,]*(\.\d+)?|\b\d[\d,]*(\.\d\d)\b/g;
+// Locations that are really meeting links / dial-ins, not places to drive to.
+const VIRTUAL = /zoom|teams|meet\.google|webex|https?:|\bcall\b|phone|virtual|online|dial[- ]?in|skype/i;
+const ONSITE_WORD = /\bon[- ]?site\b/i;
+const FLIGHT_WORD = /\bflight\b|✈|\bairlines?\b|\b(?:DL|AA|UA|WN|B6|NK|F9|AS)\s?\d{2,4}\b/i;
+const isOnsite = (e) => !e.allDay && (ONSITE_WORD.test(e.title) || ONSITE_WORD.test(e.location) || (!!e.location && !VIRTUAL.test(e.location)) || FLIGHT_WORD.test(e.title));
 
 export function mountHearth(app, { hearthDir, tomtomKey, httpServer, log = console }) {
   const secrets = () => readEnvFile(path.join(hearthDir, 'secrets.env'));
@@ -192,11 +198,55 @@ export function mountHearth(app, { hearthDir, tomtomKey, httpServer, log = conso
       stale: raw.stale,
       events: raw.events
         .filter((e) => !hide.some((h) => (e.title + ' ' + e.location).toLowerCase().includes(h)))
-        .map((e) => ({ ...e, title: tidy(e.title), location: e.location.split(',')[0] })),
+        .map((e) => ({ ...e, title: tidy(e.title), location: VIRTUAL.test(e.location) ? '' : e.location.split(',')[0], onsite: isOnsite(e) })),
     };
   }
 
   // ---------- traffic (TomTom) ----------
+  async function route(from, to) {
+    const j = await getJson(
+      `https://api.tomtom.com/routing/1/calculateRoute/${from.lat},${from.lon}:${to.lat},${to.lon}/json?traffic=true&travelMode=car&routeType=fastest&key=${tomtomKey}`,
+    );
+    const s = j.routes[0].summary;
+    return { minutes: Math.round(s.travelTimeInSeconds / 60), delayMin: Math.round((s.trafficDelayInSeconds || 0) / 60), miles: +(s.lengthInMeters / 1609.34).toFixed(1) };
+  }
+
+  // Where is the next place John has to physically be? A calendar event in the
+  // next ~18 h with a real address, an "on-site" tag (mapped via onsitePlaces),
+  // or a flight (mapped to the airport, with a bigger buffer).
+  async function nextTrip(c) {
+    const now = Date.now();
+    const raw = (await calendarRaw()).events;
+    const hide = (c.calendarHide || []).map((x) => x.toLowerCase());
+    for (const e of raw) {
+      if (e.allDay || +new Date(e.start) < now - 10 * 60e3 || +new Date(e.start) > now + (c.tripLookaheadHours || 18) * 3600e3) continue;
+      if (hide.some((h) => (e.title + ' ' + e.location).toLowerCase().includes(h))) continue;
+      let place = null,
+        buffer = c.tripBufferMin ?? 10,
+        kind = 'meeting';
+      if (FLIGHT_WORD.test(e.title)) {
+        place = { name: 'TPA Airport', address: c.airportAddress || '4100 George J Bean Pkwy, Tampa, FL 33607' };
+        buffer = c.flightBufferMin ?? 100;
+        kind = 'flight';
+      } else if (e.location && !VIRTUAL.test(e.location)) {
+        const known = (c.onsitePlaces || []).find((p) => (e.location + ' ' + e.title).toLowerCase().includes(p.match.toLowerCase()));
+        place = known && !/\d/.test(e.location) ? known : { name: e.location.split(',')[0], address: e.location };
+      } else if (ONSITE_WORD.test(e.title) || ONSITE_WORD.test(e.location)) {
+        place = (c.onsitePlaces || []).find((p) => e.title.toLowerCase().includes(p.match.toLowerCase())) || null;
+      }
+      if (!place) continue;
+      try {
+        const g = place.lat ? place : await geocode(place.address);
+        const r = await route(await home(), g);
+        const leaveBy = new Date(+new Date(e.start) - (r.minutes + buffer) * 60e3);
+        return { name: place.name, ...r, lat: g.lat, lon: g.lon, featured: true, kind, event: tidy(e.title), start: e.start, leaveBy: leaveBy.toISOString() };
+      } catch (err) {
+        log.warn?.('[hearth] trip route failed', err.message);
+      }
+    }
+    return null;
+  }
+
   const commutes = memo(8 * 60e3, async () => {
     const c = await config();
     const h = await home();
@@ -204,21 +254,18 @@ export function mountHearth(app, { hearthDir, tomtomKey, httpServer, log = conso
     for (const d of c.destinations || []) {
       try {
         const g = d.lat ? d : await geocode(d.address);
-        const j = await getJson(
-          `https://api.tomtom.com/routing/1/calculateRoute/${h.lat},${h.lon}:${g.lat},${g.lon}/json?traffic=true&travelMode=car&routeType=fastest&key=${tomtomKey}`,
-        );
-        const s = j.routes[0].summary;
-        out.push({
-          name: d.name,
-          minutes: Math.round(s.travelTimeInSeconds / 60),
-          delayMin: Math.round((s.trafficDelayInSeconds || 0) / 60),
-          miles: +(s.lengthInMeters / 1609.34).toFixed(1),
-          lat: g.lat,
-          lon: g.lon,
-        });
+        out.push({ name: d.name, ...(await route(h, g)), lat: g.lat, lon: g.lon });
       } catch (e) {
         out.push({ name: d.name, error: true });
       }
+    }
+    // Calendar trip takes slot 2 (Suncoast stays pinned first); total stays at 4.
+    const trip = await nextTrip(c).catch(() => null);
+    if (trip) {
+      const dup = out.findIndex((r) => r.name === trip.name);
+      if (dup >= 0) out.splice(dup, 1);
+      out.splice(1, 0, trip);
+      out.length = Math.min(out.length, 4);
     }
     return { at: Date.now(), routes: out };
   });
@@ -285,6 +332,87 @@ export function mountHearth(app, { hearthDir, tomtomKey, httpServer, log = conso
         return true;
       });
     return { at: Date.now(), center: h, radiusKm: r, incidents: major.slice(0, 10), total: list.length };
+  });
+
+  // ---------- storm watch (NOAA nowCOAST rasters) ----------
+  // Pulls small WMS images centred on the house and measures the nearest
+  // coloured pixel: lightning strike density (15 min) and radar reflectivity.
+  async function rasterNearest(service, layer, h, radiusKm, px) {
+    const dLat = radiusKm / 111,
+      dLon = radiusKm / (111 * Math.cos((h.lat * Math.PI) / 180));
+    const bbox = [h.lat - dLat, h.lon - dLon, h.lat + dLat, h.lon + dLon].map((x) => x.toFixed(4)).join(',');
+    const url = `https://nowcoast.noaa.gov/geoserver/observations/${service}/ows?service=WMS&version=1.3.0&request=GetMap&layers=${layer}&styles=&crs=EPSG:4326&bbox=${bbox}&width=${px}&height=${px}&format=image/png&transparent=true`;
+    const r = await fetch(url, { headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(20000) });
+    if (!r.ok) throw Error('nowcoast ' + r.status);
+    const png = PNG.sync.read(Buffer.from(await r.arrayBuffer()));
+    const kmPerPx = (2 * radiusKm) / px;
+    let nearest = Infinity,
+      count = 0,
+      nx = 0,
+      ny = 0;
+    for (let y = 0; y < png.height; y++)
+      for (let x = 0; x < png.width; x++) {
+        if (png.data[(y * png.width + x) * 4 + 3] < 40) continue;
+        count++;
+        const d = Math.hypot(x - png.width / 2, y - png.height / 2) * kmPerPx;
+        if (d < nearest) (nearest = d), (nx = x - png.width / 2), (ny = png.height / 2 - y);
+      }
+    const dir = count ? ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(((Math.atan2(nx, ny) * 180) / Math.PI + 360) % 360 / 45) % 8] : null;
+    return { nearestKm: count ? +nearest.toFixed(1) : null, dir, coverage: +(count / (png.width * png.height)).toFixed(3) };
+  }
+  const storm = memo(3 * 60e3, async () => {
+    const c = await config();
+    const h = await home();
+    const [lightning, radar, w] = await Promise.all([
+      rasterNearest('lightning_detection', 'ldn_lightning_strike_density', h, 60, 120).catch(() => null),
+      rasterNearest('weather_radar', 'conus_base_reflectivity_mosaic', h, 60, 120).catch(() => null),
+      weather().catch(() => null),
+    ]);
+    const warnings = (w?.alerts || []).filter((a) => /Warning/.test(a.event)).map((a) => a.event);
+    const stormKm = c.storm?.lightningKm ?? 16; // ~10 miles
+    const rainKm = c.storm?.rainKm ?? 40;
+    const mode = (lightning?.nearestKm != null && lightning.nearestKm <= stormKm) || warnings.length ? 'storm' : radar?.nearestKm != null && radar.nearestKm <= rainKm ? 'rain' : 'clear';
+    return { at: Date.now(), mode, lightning, radar, warnings };
+  });
+
+  // ---------- morning briefing (Ollama, same model list as the ticker) ----------
+  const brief = memo(20 * 60e3, async () => {
+    const c = await config();
+    const [w, cal, com, inc, st] = await Promise.allSettled([weather(), calendar(), commutes(), incidents(), storm()]);
+    const now = new Date();
+    const today = now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+    const todays = (cal.value?.events || []).filter((e) => (e.allDay ? e.start.slice(0, 10) === today : new Date(e.start).toLocaleDateString('en-CA', { timeZone: 'America/New_York' }) === today) && new Date(e.end) > now);
+    const trip = (com.value?.routes || []).find((r) => r.featured);
+    const facts = {
+      day: now.toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric' }),
+      weather: w.value && { now: w.value.now?.tempF, today: w.value.daily?.find((d) => d.day)?.detail, alerts: w.value.alerts?.map((a) => a.event) },
+      events: todays.slice(0, 4).map((e) => `${e.allDay ? 'all day' : new Date(e.start).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' })} ${e.title}${e.onsite ? ' (on site)' : ''}`),
+      trip: trip && `${trip.event} at ${trip.name}: ${trip.minutes} min drive, leave by ${new Date(trip.leaveBy).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' })}`,
+      traffic: inc.value?.incidents?.slice(0, 2).map((i) => `${i.kind} ${i.road} ${i.from}`),
+      storm: st.value?.mode,
+    };
+    let text = null;
+    for (const m of [].concat(c.ollamaModel || [])) {
+      try {
+        const r = await fetch((c.ollamaUrl || 'http://127.0.0.1:11434') + '/api/generate', {
+          method: 'POST',
+          signal: AbortSignal.timeout(90000),
+          body: JSON.stringify({
+            model: m,
+            stream: false,
+            think: false,
+            options: { temperature: 0.5, num_predict: 160 },
+            prompt:
+              'Write a warm, brief good-morning briefing for John, shown on his living-room TV. Two or three short sentences, under 55 words total, plain text, no emoji, no dollar amounts, no greeting line (the screen already says Good morning). Cover what matters today: weather, the first commitment and when to leave if there is a trip, anything notable on the roads. Use only these facts:\n' +
+              JSON.stringify(facts),
+          }),
+        });
+        const j = await r.json();
+        text = String(j.response || '').replace(/<think>[\s\S]*?<\/think>/g, '').replace(MONEY, '').replace(/\s+/g, ' ').trim();
+        if (text) break;
+      } catch {}
+    }
+    return { at: Date.now(), text, facts, events: todays.slice(0, 4), trip: trip || null, weather: w.value ? { now: w.value.now, today: w.value.daily?.find((d) => d.day), tonight: w.value.daily?.find((d) => !d.day), alerts: w.value.alerts } : null };
   });
 
   // ---------- guest mode ----------
@@ -365,6 +493,8 @@ export function mountHearth(app, { hearthDir, tomtomKey, httpServer, log = conso
   router.get('/commutes', safe(commutes));
   router.get('/incidents', safe(incidents));
   router.get('/sitrep', safe(sitrep));
+  router.get('/storm', safe(storm));
+  router.get('/brief', safe(brief));
   router.get(
     '/state',
     safe(async () => {
@@ -379,6 +509,9 @@ export function mountHearth(app, { hearthDir, tomtomKey, httpServer, log = conso
         notesAt: notes.updated || null,
         orbit: c.orbit || {},
         rotate: c.rotate || {},
+        wake: { time: '06:45', greetSeconds: 80, ...(c.wake || {}) },
+        night: { style: 'surveillance', lateAmberHour: 22, ...(c.night || {}) },
+        features: { houseDip: true, planeTags: true, storm: true, ...(c.features || {}) },
         guest: g
           ? { name: g.name, from: g.from, to: g.to, message: g.message || '', schedule: g.schedule || [], houseInfo: c.houseInfo || [], wifi: await wifiQr() }
           : null,
