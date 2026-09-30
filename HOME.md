@@ -78,3 +78,7 @@ Each cycle (`rotate.orbitSeconds`, default 75 s) ends in one visit: worst traffi
 ## Endpoints
 
 `/api/hearth/storm` (nowCOAST lightning + radar nearest-pixel around the house), `/api/hearth/brief` (morning briefing), `/api/hearth/commutes` now includes a calendar trip (`featured: true`, `leaveBy`). Previews: `/tv/?greet`, `?storm=test`, `?dip`, `?radar`, `?night=0|1`, `?late`, `?focus=lat,lon`, `?tagradius=km`. Probe runner: `sunwatch/tv-dev/run.mjs`.
+
+### Wake-up notes (tested Sept 30, 00:04–00:45)
+- The LG drops to standby ~15 min after the PC output is blanked; while asleep it stops answering on 3001, which `/api/hearth/tv` uses as the "TV is on" signal.
+- Wake-on-LAN did **not** wake it: "Mobile TV On → Turn on via Wi-Fi" is probably off. Until that's enabled (or the TV is paired), the greeting falls back to playing the first time the TV is switched on between wake time and 11:00 (`wake.windowEnd`). The scheduled greeting only fires if the TV is actually on (`wake.requireTv: false` overrides for testing).
