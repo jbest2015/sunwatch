@@ -616,7 +616,10 @@ function checkGreeting() {
     checkGreeting.warmed = true; // warm the briefing so the model has answered by wake time
     api('brief').catch(() => {});
   }
-  if (hmNow() === wake && greetedDay !== dayKey(new Date())) showGreeting();
+  // Only greet at wake time if the TV is actually on; otherwise watchTv() greets
+  // the first time it is switched on during the morning window.
+  const tvOk = tvWasUp !== false || STATE.wake?.requireTv === false;
+  if (hmNow() === wake && greetedDay !== dayKey(new Date()) && tvOk && !GREETING) showGreeting();
 }
 // Fallback when the TV could not be woken at wake time: greet the first time the
 // TV is switched on during the morning window (wake time → 11:00).
